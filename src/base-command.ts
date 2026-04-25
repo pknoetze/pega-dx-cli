@@ -67,13 +67,16 @@ export abstract class BaseCommand extends Command {
   protected fail(err: unknown): never {
     const normalized: NormalizedError = isNormalizedError(err)
       ? err
-      : { code: 'UNKNOWN', message: (err as Error).message ?? 'Unknown error', httpStatus: 0 };
+      : { code: 'UNKNOWN', message: (err as Error).message || 'Unknown error', httpStatus: 0 };
     error(normalized);
     this.exit(1);
   }
 
-  override async catch(err: Error & { oclif?: { exit?: number } }): Promise<never> {
-    if (err.oclif?.exit !== undefined) throw err;
+  override async catch(err: Error & { oclif?: { exit?: number | false } }): Promise<never> {
+    // Re-throw oclif-owned exit signals (parse errors, help, version) so
+    // oclif's top-level handler formats and exits correctly. Numeric exit codes
+    // only — `exit: false` is a non-fatal warning marker.
+    if (typeof err.oclif?.exit === 'number') throw err;
     this.fail(err);
   }
 }

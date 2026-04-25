@@ -1,5 +1,6 @@
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import nock from 'nock';
+import { Flags } from '@oclif/core';
 import { resetMockFs } from './helpers/mock-filesystem.js';
 import { captureOutput, type CapturedOutput } from './helpers/capture-output.js';
 import { mockOAuthSuccess } from './helpers/mock-pega-api.js';
@@ -85,5 +86,116 @@ describe('getClient + emit', () => {
     await TestCmd.run(['--fields', 'id,keep']);
     const parsed = JSON.parse(captured.stdout.join(''));
     expect(parsed).toEqual({ id: 'C-1', keep: 'me' });
+  });
+});
+
+/** Extract the first valid JSON object written to a captured stream, ignoring node warnings. */
+function parseFirstJson(lines: string[]): Record<string, unknown> {
+  const combined = lines.join('');
+  // Search for a '{' that begins a valid JSON object. Our output uses JSON.stringify(…, null, 2)
+  // so it looks like `{\n  "key":`. Node warning messages also contain `{` but in non-JSON form.
+  let searchFrom = 0;
+  while (searchFrom < combined.length) {
+    const start = combined.indexOf('{', searchFrom);
+    if (start === -1) break;
+    // Try to parse from this position; advance past it if it fails
+    try {
+      return JSON.parse(combined.slice(start));
+    } catch {
+      searchFrom = start + 1;
+    }
+  }
+  throw new SyntaxError('No JSON object found in captured output');
+}
+
+describe('catch + fail', () => {
+  test('runtime error from run() emits structured error to stderr and exits non-zero', async () => {
+    // Use TestCmd with a deliberately broken setup: missing PEGA_BASE_URL.
+    delete process.env.PEGA_BASE_URL;
+
+    captured = captureOutput();
+    await expect(TestCmd.run([])).rejects.toThrow();
+    const err = parseFirstJson(captured.stderr);
+    expect(err).toMatchObject({
+      error: true,
+      code: 'INVALID_CONFIG',
+    });
+  });
+
+  test('plain Error (no NormalizedError shape) is coerced to UNKNOWN', async () => {
+    class ThrowingCmd extends BaseCommand {
+      static override description = 'throws plain';
+      async run(): Promise<void> {
+        throw new Error('boom');
+      }
+    }
+    captured = captureOutput();
+    await expect(ThrowingCmd.run([])).rejects.toThrow();
+    const err = parseFirstJson(captured.stderr);
+    expect(err).toMatchObject({ error: true, code: 'UNKNOWN', message: 'boom' });
+  });
+
+  test('NormalizedError thrown in run() is emitted via fail without coercion', async () => {
+    class CustomErrorCmd extends BaseCommand {
+      static override description = 'throws normalized';
+      async run(): Promise<void> {
+        const obj = { code: 'CUSTOM', message: 'custom err', httpStatus: 0 };
+        throw obj as unknown as Error;
+      }
+    }
+    captured = captureOutput();
+    await expect(CustomErrorCmd.run([])).rejects.toThrow();
+    const err = parseFirstJson(captured.stderr);
+    expect(err).toMatchObject({ error: true, code: 'CUSTOM', message: 'custom err' });
+  });
+
+  test('oclif parse error is re-thrown (not handled by fail)', async () => {
+    class FlaggedCmd extends BaseCommand {
+      static override description = 'requires flag';
+      static override flags = {
+        required: Flags.string({ required: true }),
+      };
+      async run(): Promise<void> {
+        // parse() triggers the required-flag check; the parse error propagates before run body executes
+        await this.parse(FlaggedCmd);
+      }
+    }
+    captured = captureOutput();
+    // Running without --required should produce an oclif parse error, NOT pass through fail()
+    await expect(FlaggedCmd.run([])).rejects.toThrow();
+    // Our structured error always has `"error": true`; oclif's handler does not emit that shape
+    expect(captured.stderr.join('')).not.toMatch(/"error"\s*:\s*true/);
+  });
+
+  test('emitDryRun delegates to output.dryRun (writes redacted request to stdout)', async () => {
+    class DryRunCmd extends BaseCommand {
+      static override description = 'emits dry run';
+      async run(): Promise<void> {
+        this.emitDryRun({
+          method: 'GET',
+          url: 'https://x/path',
+          headers: { Authorization: 'Bearer secret' },
+        });
+      }
+    }
+    captured = captureOutput();
+    await DryRunCmd.run([]);
+    const out = JSON.parse(captured.stdout.join(''));
+    expect(out.headers.Authorization).toBe('[REDACTED]');
+    expect(out.url).toBe('https://x/path');
+  });
+
+  test('fail handles error without a message field', async () => {
+    class NoMsgCmd extends BaseCommand {
+      static override description = 'throws no message';
+      async run(): Promise<void> {
+        throw new Error();
+      }
+    }
+    captured = captureOutput();
+    await expect(NoMsgCmd.run([])).rejects.toThrow();
+    const err = parseFirstJson(captured.stderr);
+    expect(err.code).toBe('UNKNOWN');
+    expect(err.message).toBe('Unknown error');
   });
 });
