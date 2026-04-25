@@ -25,12 +25,15 @@ interface TokenFileShape {
 const REFRESH_BUFFER_MS = 60_000;
 
 function homeDir(): string {
-  return (
-    process.env.HOME ??
-    process.env.USERPROFILE ??
-    process.env.HOMEPATH ??
-    '~'
-  );
+  const dir = process.env.HOME ?? process.env.USERPROFILE;
+  if (!dir) {
+    throw {
+      code: 'INVALID_CONFIG',
+      message: 'Cannot determine home directory (HOME / USERPROFILE unset)',
+      httpStatus: 0,
+    } satisfies NormalizedError;
+  }
+  return dir;
 }
 
 function configDir(): string {
@@ -83,10 +86,14 @@ export function getConfig(profile = 'default'): PegaConfig {
 
 function readTokenFile(): TokenFileShape {
   try {
-    return JSON.parse(fs.readFileSync(tokenPath(), 'utf-8'));
+    const parsed: unknown = JSON.parse(fs.readFileSync(tokenPath(), 'utf-8'));
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return parsed as TokenFileShape;
+    }
   } catch {
-    return {};
+    /* ignore parse / ENOENT */
   }
+  return {};
 }
 
 function writeTokenFile(data: TokenFileShape): void {
@@ -180,12 +187,7 @@ export async function getToken(opts: {
 }
 
 export function clearToken(profile: string): void {
-  let store: TokenFileShape;
-  try {
-    store = readTokenFile();
-  } catch {
-    return;
-  }
+  const store = readTokenFile();
   if (!store[profile]) return;
   delete store[profile];
   writeTokenFile(store);

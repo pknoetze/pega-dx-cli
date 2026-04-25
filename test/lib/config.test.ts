@@ -95,6 +95,14 @@ describe('getConfig', () => {
     );
   });
 
+  test('throws INVALID_CONFIG when clientSecret missing', () => {
+    process.env.PEGA_BASE_URL = 'https://p';
+    process.env.PEGA_CLIENT_ID = 'x';
+    expect(() => getConfig('default')).toThrow(
+      expect.objectContaining({ code: 'INVALID_CONFIG' }),
+    );
+  });
+
   test('reads named profile from config file', () => {
     seedFile(
       CONFIG_PATH,
@@ -247,6 +255,42 @@ describe('getToken', () => {
     const diff = expiresAt - Date.now();
     expect(diff).toBeGreaterThan(3500_000);
     expect(diff).toBeLessThan(3700_000);
+  });
+
+  test('OAuth 200 with missing access_token throws OAUTH_INVALID_RESPONSE', async () => {
+    nock('https://pega.example.com')
+      .post('/prweb/PRRestService/oauth2/v1/token')
+      .reply(200, { token_type: 'Bearer' });
+    await expect(getToken({ noCache: true, profile: 'default' })).rejects.toMatchObject({
+      code: 'OAUTH_INVALID_RESPONSE',
+    });
+  });
+
+  test('network failure normalizes to NETWORK_ERROR', async () => {
+    nock('https://pega.example.com')
+      .post('/prweb/PRRestService/oauth2/v1/token')
+      .replyWithError('connection refused');
+    await expect(getToken({ noCache: true, profile: 'default' })).rejects.toMatchObject({
+      code: 'NETWORK_ERROR',
+    });
+  });
+
+  test('forceFresh=true + noCache=true skips both read and write', async () => {
+    seedFile(
+      TOKEN_PATH,
+      JSON.stringify({
+        default: {
+          accessToken: 'cached',
+          expiresAt: new Date(Date.now() + 600_000).toISOString(),
+        },
+      }),
+    );
+    mockOAuthSuccess('https://pega.example.com', 'fresh-and-uncached');
+    const t = await getToken({ noCache: true, profile: 'default', forceFresh: true });
+    expect(t.accessToken).toBe('fresh-and-uncached');
+    // Token file should still contain the OLD cached value (no write occurred).
+    const stored = JSON.parse(readMockFile(TOKEN_PATH));
+    expect(stored.default.accessToken).toBe('cached');
   });
 });
 
