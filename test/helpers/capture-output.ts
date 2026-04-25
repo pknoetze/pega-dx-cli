@@ -29,3 +29,25 @@ export function captureOutput(): CapturedOutput {
     },
   };
 }
+
+/**
+ * Parse the first JSON object found in stderr output. Skips Node deprecation
+ * warning lines that oclif's CLIError emission may inject under Jest's VM
+ * sandbox before the actual structured error JSON.
+ */
+export function parseFirstJson(lines: string[]): unknown {
+  const text = lines.join('');
+  // Find the first '{' that begins a parseable JSON object.
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] !== '{') continue;
+    for (let j = text.length; j > i; j--) {
+      const slice = text.slice(i, j);
+      try {
+        return JSON.parse(slice);
+      } catch {
+        /* keep narrowing */
+      }
+    }
+  }
+  throw new Error('No JSON object found in output');
+}

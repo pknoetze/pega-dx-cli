@@ -26,9 +26,12 @@ export default class AuthLogin extends BaseCommand {
     }
 
     try {
-      clearToken(baseFlags.profile);
+      const noCache = baseFlags['no-cache'];
+      if (!noCache) {
+        clearToken(baseFlags.profile);
+      }
       const token = await getToken({
-        noCache: baseFlags['no-cache'],
+        noCache,
         profile: baseFlags.profile,
         forceFresh: true,
       });

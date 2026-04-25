@@ -1,24 +1,8 @@
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import nock from 'nock';
-import { resetMockFs } from '../../helpers/mock-filesystem.js';
-import { captureOutput, type CapturedOutput } from '../../helpers/capture-output.js';
+import { resetMockFs, seedFile, readMockFile } from '../../helpers/mock-filesystem.js';
+import { captureOutput, parseFirstJson, type CapturedOutput } from '../../helpers/capture-output.js';
 import { mockOAuthSuccess, mockOAuthFailure } from '../../helpers/mock-pega-api.js';
-
-/** Extract the first valid JSON object from captured stream output, ignoring node warnings. */
-function parseFirstJson(lines: string[]): Record<string, unknown> {
-  const combined = lines.join('');
-  let searchFrom = 0;
-  while (searchFrom < combined.length) {
-    const start = combined.indexOf('{', searchFrom);
-    if (start === -1) break;
-    try {
-      return JSON.parse(combined.slice(start));
-    } catch {
-      searchFrom = start + 1;
-    }
-  }
-  throw new SyntaxError('No JSON object found in captured output');
-}
 
 jest.unstable_mockModule('node:fs', async () => {
   const memfs = await import('memfs');
@@ -77,8 +61,33 @@ describe('auth login', () => {
     mockOAuthFailure('https://pega.example.com', 401);
     captured = captureOutput();
     await expect(AuthLogin.run([])).rejects.toThrow();
-    const err = parseFirstJson(captured.stderr);
+    const err = parseFirstJson(captured.stderr) as Record<string, unknown>;
     expect(err.error).toBe(true);
     expect(err.code).toBe('UNAUTHORIZED');
+  });
+
+  test('--no-cache does not read or write token file', async () => {
+    // Pre-seed a token file so we can verify it remains untouched.
+    seedFile(
+      `${process.env.HOME}/.pega-cli/token.json`,
+      JSON.stringify({
+        default: {
+          accessToken: 'previously-cached',
+          expiresAt: new Date(Date.now() + 600_000).toISOString(),
+        },
+      }),
+    );
+
+    mockOAuthSuccess('https://pega.example.com', 'fresh-no-cache');
+    captured = captureOutput();
+    await AuthLogin.run(['--no-cache']);
+
+    // Confirm the OAuth call happened (output mentions a fresh token, not the cached one).
+    const out = JSON.parse(captured.stdout.join(''));
+    expect(out.authenticated).toBe(true);
+
+    // Confirm the token file was NOT modified — still contains the previously-cached token.
+    const stored = JSON.parse(readMockFile(`${process.env.HOME}/.pega-cli/token.json`));
+    expect(stored.default.accessToken).toBe('previously-cached');
   });
 });

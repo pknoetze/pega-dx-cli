@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globa
 import nock from 'nock';
 import { Flags } from '@oclif/core';
 import { resetMockFs } from './helpers/mock-filesystem.js';
-import { captureOutput, type CapturedOutput } from './helpers/capture-output.js';
+import { captureOutput, parseFirstJson, type CapturedOutput } from './helpers/capture-output.js';
 import { mockOAuthSuccess } from './helpers/mock-pega-api.js';
 
 jest.unstable_mockModule('node:fs', async () => {
@@ -88,25 +88,6 @@ describe('getClient + emit', () => {
     expect(parsed).toEqual({ id: 'C-1', keep: 'me' });
   });
 });
-
-/** Extract the first valid JSON object written to a captured stream, ignoring node warnings. */
-function parseFirstJson(lines: string[]): Record<string, unknown> {
-  const combined = lines.join('');
-  // Search for a '{' that begins a valid JSON object. Our output uses JSON.stringify(…, null, 2)
-  // so it looks like `{\n  "key":`. Node warning messages also contain `{` but in non-JSON form.
-  let searchFrom = 0;
-  while (searchFrom < combined.length) {
-    const start = combined.indexOf('{', searchFrom);
-    if (start === -1) break;
-    // Try to parse from this position; advance past it if it fails
-    try {
-      return JSON.parse(combined.slice(start));
-    } catch {
-      searchFrom = start + 1;
-    }
-  }
-  throw new SyntaxError('No JSON object found in captured output');
-}
 
 describe('catch + fail', () => {
   test('runtime error from run() emits structured error to stderr and exits non-zero', async () => {
@@ -194,7 +175,7 @@ describe('catch + fail', () => {
     }
     captured = captureOutput();
     await expect(NoMsgCmd.run([])).rejects.toThrow();
-    const err = parseFirstJson(captured.stderr);
+    const err = parseFirstJson(captured.stderr) as Record<string, unknown>;
     expect(err.code).toBe('UNKNOWN');
     expect(err.message).toBe('Unknown error');
   });
