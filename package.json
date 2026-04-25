@@ -1,0 +1,64 @@
+{
+  "name": "@pknoetze/pega-dx-cli",
+  "version": "0.1.0",
+  "description": "CLI for Pega Infinity DX API V2 (Constellation)",
+  "type": "module",
+  "bin": {
+    "pega": "./bin/run.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "oclif.manifest.json"
+  ],
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "rimraf dist",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests",
+    "prepack": "npm run clean && npm run build && oclif manifest"
+  },
+  "oclif": {
+    "bin": "pega",
+    "dirname": "pega",
+    "commands": "./dist/commands",
+    "topicSeparator": " ",
+    "topics": {
+      "auth": {
+        "description": "Authentication and connectivity"
+      },
+      "cases": {
+        "description": "Pega case operations (V2)"
+      },
+      "assignments": {
+        "description": "Pega assignment operations (V2)"
+      }
+    }
+  },
+  "dependencies": {
+    "@oclif/core": "^4.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "jest": "^29.7.0",
+    "memfs": "^4.12.0",
+    "nock": "^13.5.0",
+    "oclif": "^4.0.0",
+    "prettier": "^3.3.0",
+    "rimraf": "^6.0.1",
+    "ts-jest": "^29.2.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.0"
+  }
+}
