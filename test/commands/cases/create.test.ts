@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import nock from 'nock';
 import { resetMockFs, seedFile } from '../../helpers/mock-filesystem.js';
-import { captureOutput, type CapturedOutput } from '../../helpers/capture-output.js';
+import { captureOutput, parseFirstJson, type CapturedOutput } from '../../helpers/capture-output.js';
 import { mockOAuthSuccess } from '../../helpers/mock-pega-api.js';
 
 jest.unstable_mockModule('node:fs', async () => {
@@ -90,5 +90,17 @@ describe('cases create', () => {
     await CasesCreate.run(['--type', 'Claim', '--data', '{"k":"v"}', '--dry-run']);
     const out = JSON.parse(captured.stdout.join(''));
     expect(out.body).toEqual({ caseTypeID: 'Claim', content: { k: 'v' } });
+  });
+
+  test('404 from POST emits structured error and exits 1', async () => {
+    mockOAuthSuccess('https://pega.example.com');
+    nock('https://pega.example.com')
+      .post('/prweb/api/application/v2/cases')
+      .reply(404, { localizedValue: 'Type not found' });
+
+    captured = captureOutput();
+    await expect(CasesCreate.run(['--type', 'Missing'])).rejects.toThrow();
+    const err = parseFirstJson(captured.stderr) as Record<string, unknown>;
+    expect(err).toMatchObject({ error: true, code: 'NOT_FOUND', httpStatus: 404 });
   });
 });

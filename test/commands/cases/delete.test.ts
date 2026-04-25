@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import nock from 'nock';
 import { resetMockFs } from '../../helpers/mock-filesystem.js';
-import { captureOutput, type CapturedOutput } from '../../helpers/capture-output.js';
+import { captureOutput, parseFirstJson, type CapturedOutput } from '../../helpers/capture-output.js';
 import { mockOAuthSuccess } from '../../helpers/mock-pega-api.js';
 
 jest.unstable_mockModule('node:fs', async () => {
@@ -54,6 +54,18 @@ describe('cases delete', () => {
     await CasesDelete.run(['C-1', '--dry-run']);
     const out = JSON.parse(captured.stdout.join(''));
     expect(out.method).toBe('DELETE');
-    expect(out.url).toContain('/cases/C-1');
+    expect(out.url).toBe('https://pega.example.com/prweb/api/application/v2/cases/C-1');
+  });
+
+  test('404 emits structured error and exits 1', async () => {
+    mockOAuthSuccess('https://pega.example.com');
+    nock('https://pega.example.com')
+      .delete('/prweb/api/application/v2/cases/MISSING')
+      .reply(404, { localizedValue: 'Case not found' });
+
+    captured = captureOutput();
+    await expect(CasesDelete.run(['MISSING'])).rejects.toThrow();
+    const err = parseFirstJson(captured.stderr) as Record<string, unknown>;
+    expect(err).toMatchObject({ error: true, code: 'NOT_FOUND', httpStatus: 404 });
   });
 });
