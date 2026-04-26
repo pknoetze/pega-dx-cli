@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import nock from 'nock';
-import { createPegaApiClient, type LoggedRequest } from '../../src/lib/api-client.js';
+import { createPegaApiClient, type LoggedRequest, EXTENDED_TIMEOUT_MS } from '../../src/lib/api-client.js';
 
 const BASE = 'https://pega.example.com';
 const V2 = `${BASE}/prweb/api/application/v2`;
@@ -135,6 +135,10 @@ describe('createPegaApiClient', () => {
       .matchHeader('x-origin-channel', 'Mobile')
       .reply(200, {});
     await client().get('/cases/X', { extraHeaders: { 'x-origin-channel': 'Mobile' } });
+  });
+
+  test('EXTENDED_TIMEOUT_MS is exported and equals 45000', () => {
+    expect(EXTENDED_TIMEOUT_MS).toBe(45_000);
   });
 
   test('onVerbose callback receives redacted Authorization header', async () => {

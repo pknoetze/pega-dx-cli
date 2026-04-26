@@ -40,6 +40,7 @@ export interface PegaApiClientDeps {
 }
 
 const DEFAULT_TIMEOUT_MS = 15_000;
+export const EXTENDED_TIMEOUT_MS = 45_000;
 
 function v2Root(baseUrl: string): string {
   return `${baseUrl}/prweb/api/application/v2`;
