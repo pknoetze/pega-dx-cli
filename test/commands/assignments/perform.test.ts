@@ -103,6 +103,25 @@ describe('assignments perform', () => {
     expect(err).toMatchObject({ error: true, code: 'NOT_FOUND', httpStatus: 404 });
   });
 
+  test('GET response without ETag emits MISSING_ETAG error and exits 1', async () => {
+    mockOAuthSuccess('https://pega.example.com');
+    // GET returns 200 but does NOT set an ETag header.
+    nock('https://pega.example.com')
+      .get('/prweb/api/application/v2/assignments/A-NO-ETAG')
+      .reply(200, { id: 'A-NO-ETAG' }); // no headers arg → no ETag
+
+    captured = captureOutput();
+    await expect(
+      AssignmentsPerform.run(['A-NO-ETAG', '--action', 'Submit']),
+    ).rejects.toThrow();
+    const err = parseFirstJson(captured.stderr) as Record<string, unknown>;
+    expect(err).toMatchObject({
+      error: true,
+      code: 'MISSING_ETAG',
+      httpStatus: 200,
+    });
+  });
+
   test('URL-encodes assignment ID and action ID', async () => {
     mockOAuthSuccess('https://pega.example.com');
     mockOAuthSuccess('https://pega.example.com');

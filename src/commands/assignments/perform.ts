@@ -2,6 +2,7 @@ import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { getConfig } from '../../lib/config.js';
 import { readDataFlag } from '../../lib/input.js';
+import { type NormalizedError } from '../../lib/errors.js';
 
 export default class AssignmentsPerform extends BaseCommand {
   static override description = 'Perform an action on an assignment (PATCH with If-Match eTag)';
@@ -60,14 +61,14 @@ export default class AssignmentsPerform extends BaseCommand {
       const meta = await client.getWithMeta(`/assignments/${encId}`);
       const eTag = meta.eTag;
       if (!eTag) {
-        this.fail({
+        throw {
           code: 'MISSING_ETAG',
           message: 'Assignment response did not include an ETag header',
           httpStatus: meta.status,
-        });
+        } satisfies NormalizedError;
       }
       const result = await client.patch(path, body, {
-        extraHeaders: { 'If-Match': eTag! },
+        extraHeaders: { 'If-Match': eTag },
       });
       this.emit(result, baseFlags);
     } catch (err) {
