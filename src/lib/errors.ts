@@ -64,3 +64,7 @@ export function isNormalizedError(x: unknown): x is NormalizedError {
   const e = x as Partial<NormalizedError>;
   return typeof e.code === 'string' && typeof e.message === 'string' && typeof e.httpStatus === 'number';
 }
+
+export function exitCodeFor(err: NormalizedError): 1 | 2 {
+  return err.code === 'INVALID_CONFIG' || err.code === 'INVALID_ARGS' ? 2 : 1;
+}

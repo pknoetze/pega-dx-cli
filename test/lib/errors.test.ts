@@ -1,5 +1,5 @@
 import { describe, test, expect } from '@jest/globals';
-import { fromHttpResponse, fromNetworkError, isNormalizedError } from '../../src/lib/errors.js';
+import { fromHttpResponse, fromNetworkError, isNormalizedError, exitCodeFor } from '../../src/lib/errors.js';
 
 function mockResponse(status: number, statusText = ''): Response {
   return new Response(null, { status, statusText });
@@ -111,5 +111,26 @@ describe('isNormalizedError', () => {
     expect(isNormalizedError({})).toBe(false);
     expect(isNormalizedError(null)).toBe(false);
     expect(isNormalizedError('error')).toBe(false);
+  });
+});
+
+describe('exitCodeFor', () => {
+  test('INVALID_CONFIG returns 2', () => {
+    expect(exitCodeFor({ code: 'INVALID_CONFIG', message: 'm', httpStatus: 0 })).toBe(2);
+  });
+  test('INVALID_ARGS returns 2', () => {
+    expect(exitCodeFor({ code: 'INVALID_ARGS', message: 'm', httpStatus: 0 })).toBe(2);
+  });
+  test('NOT_FOUND returns 1', () => {
+    expect(exitCodeFor({ code: 'NOT_FOUND', message: 'm', httpStatus: 404 })).toBe(1);
+  });
+  test('UNAUTHORIZED returns 1', () => {
+    expect(exitCodeFor({ code: 'UNAUTHORIZED', message: 'm', httpStatus: 401 })).toBe(1);
+  });
+  test('TIMEOUT returns 1', () => {
+    expect(exitCodeFor({ code: 'TIMEOUT', message: 'm', httpStatus: 0 })).toBe(1);
+  });
+  test('RATE_LIMITED returns 1', () => {
+    expect(exitCodeFor({ code: 'RATE_LIMITED', message: 'm', httpStatus: 429 })).toBe(1);
   });
 });
