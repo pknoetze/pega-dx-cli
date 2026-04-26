@@ -12,6 +12,14 @@ export interface DryRunRequest {
   body?: unknown;
 }
 
+export function redactAuthHeader(headers: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(headers)) {
+    out[k] = k.toLowerCase() === 'authorization' ? '[REDACTED]' : v;
+  }
+  return out;
+}
+
 function filterFields(data: unknown, fields: string): unknown {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return data;
   const allowed = new Set(fields.split(',').map((f) => f.trim()).filter(Boolean));
@@ -48,10 +56,7 @@ export function error(err: NormalizedError): void {
 }
 
 export function dryRun(req: DryRunRequest): void {
-  const redactedHeaders: Record<string, string> = {};
-  for (const [k, v] of Object.entries(req.headers)) {
-    redactedHeaders[k] = k.toLowerCase() === 'authorization' ? '[REDACTED]' : v;
-  }
+  const redactedHeaders = redactAuthHeader(req.headers);
   const payload = {
     method: req.method,
     url: req.url,

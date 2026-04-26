@@ -1,5 +1,5 @@
 import { describe, test, expect, afterEach } from '@jest/globals';
-import { stdout, stderr, error, dryRun } from '../../src/lib/output.js';
+import { stdout, stderr, error, dryRun, redactAuthHeader } from '../../src/lib/output.js';
 import { captureOutput, type CapturedOutput } from '../helpers/capture-output.js';
 
 let captured: CapturedOutput;
@@ -104,5 +104,36 @@ describe('dryRun', () => {
     const parsed = JSON.parse(captured.stdout.join(''));
     expect(parsed.headers.authorization).toBe('[REDACTED]');
     expect(parsed.headers.AUTHORIZATION).toBe('[REDACTED]');
+  });
+});
+
+describe('redactAuthHeader', () => {
+  test('redacts Authorization (lowercase a)', () => {
+    const out = redactAuthHeader({ authorization: 'Bearer abc' });
+    expect(out).toEqual({ authorization: '[REDACTED]' });
+  });
+  test('redacts Authorization (uppercase A)', () => {
+    const out = redactAuthHeader({ Authorization: 'Bearer abc' });
+    expect(out).toEqual({ Authorization: '[REDACTED]' });
+  });
+  test('passes other headers through', () => {
+    const out = redactAuthHeader({
+      Authorization: 'Bearer abc',
+      'Content-Type': 'application/json',
+      'If-Match': '"etag-1"',
+    });
+    expect(out).toEqual({
+      Authorization: '[REDACTED]',
+      'Content-Type': 'application/json',
+      'If-Match': '"etag-1"',
+    });
+  });
+  test('returns empty object on empty input', () => {
+    expect(redactAuthHeader({})).toEqual({});
+  });
+  test('does not mutate the input', () => {
+    const input = { Authorization: 'Bearer abc' };
+    redactAuthHeader(input);
+    expect(input.Authorization).toBe('Bearer abc');
   });
 });
