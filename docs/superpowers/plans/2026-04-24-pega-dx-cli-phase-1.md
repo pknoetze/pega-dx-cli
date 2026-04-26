@@ -142,7 +142,7 @@ These facts come from `https://github.com/marco-looy/pega-dx-mcp` and anchor the
     "eslint": "^9.0.0",
     "jest": "^29.7.0",
     "memfs": "^4.12.0",
-    "nock": "^13.5.0",
+    "nock": "^14.0.0",
     "oclif": "^4.0.0",
     "prettier": "^3.3.0",
     "rimraf": "^6.0.1",
