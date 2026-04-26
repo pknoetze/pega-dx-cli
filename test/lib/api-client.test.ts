@@ -103,13 +103,30 @@ describe('createPegaApiClient', () => {
   });
 
   test('timeout throws TIMEOUT', async () => {
-    nock(BASE)
-      .get('/prweb/api/application/v2/cases/X')
-      .delay(100)
-      .reply(200, {});
-    await expect(
-      client().get('/cases/X', { timeoutMs: 10 }),
-    ).rejects.toMatchObject({ code: 'TIMEOUT' });
+    jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask'] });
+    const realFetch = global.fetch;
+    global.fetch = ((_input: RequestInfo | URL, init?: RequestInit) =>
+      new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener('abort', () => {
+          const err = new Error('aborted');
+          err.name = 'AbortError';
+          reject(err);
+        });
+      })) as typeof fetch;
+
+    try {
+      const promise = client().get('/cases/X', { timeoutMs: 100 });
+      // Attach the rejection handler BEFORE advancing timers to avoid unhandled rejection.
+      const assertion = expect(promise).rejects.toMatchObject({ code: 'TIMEOUT' });
+      // Yield to the microtask queue so tokenProvider() resolves inside doRequest
+      // and the setTimeout for the abort is registered before we advance fake time.
+      await Promise.resolve();
+      jest.advanceTimersByTime(150);
+      await assertion;
+    } finally {
+      global.fetch = realFetch;
+      jest.useRealTimers();
+    }
   });
 
   test('invokes onVerbose with request and response details', async () => {
