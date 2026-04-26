@@ -18,7 +18,7 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "clean": "rimraf dist",
+    "clean": "rimraf dist tsconfig.tsbuildinfo",
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests",
