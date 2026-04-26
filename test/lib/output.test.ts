@@ -138,6 +138,96 @@ describe('redactAuthHeader', () => {
   });
 });
 
+describe('stdout --format table', () => {
+  let stdoutSpy: jest.SpiedFunction<typeof process.stdout.write>;
+  let stderrSpy: jest.SpiedFunction<typeof process.stderr.write>;
+
+  beforeEach(() => {
+    stdoutSpy = jest.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    stderrSpy = jest.spyOn(process.stderr, 'write').mockImplementation(() => true);
+  });
+  afterEach(() => {
+    stdoutSpy.mockRestore();
+    stderrSpy.mockRestore();
+  });
+
+  test('renders array of flat objects as table with headers', () => {
+    stdout([{ id: 'A', status: 'Open' }, { id: 'B', status: 'Closed' }], { format: 'table' });
+    const out = stdoutSpy.mock.calls[0]![0] as string;
+    expect(out).toContain('id');
+    expect(out).toContain('status');
+    expect(out).toContain('A');
+    expect(out).toContain('Open');
+    expect(out).toContain('B');
+    expect(out).toContain('Closed');
+    expect(stderrSpy).not.toHaveBeenCalled();
+  });
+
+  test('renders single object as two-column key/value table', () => {
+    stdout({ id: 'CASE-1', status: 'Open' }, { format: 'table' });
+    const out = stdoutSpy.mock.calls[0]![0] as string;
+    expect(out).toContain('id');
+    expect(out).toContain('CASE-1');
+    expect(out).toContain('status');
+    expect(out).toContain('Open');
+  });
+
+  test('stringifies nested values as compact JSON in cell', () => {
+    stdout([{ id: 'A', actions: [{ id: 'Submit' }] }], { format: 'table' });
+    const out = stdoutSpy.mock.calls[0]![0] as string;
+    expect(out).toContain('[{"id":"Submit"}]');
+  });
+
+  test('stringifies nested values in single-object table', () => {
+    stdout({ id: 'A', actions: [{ id: 'Submit' }] }, { format: 'table' });
+    const out = stdoutSpy.mock.calls[0]![0] as string;
+    expect(out).toContain('id');
+    expect(out).toContain('A');
+    expect(out).toContain('actions');
+    expect(out).toContain('[{"id":"Submit"}]');
+  });
+
+  test('falls back to JSON for bare scalar with stderr warning', () => {
+    stdout('hello', { format: 'table' });
+    const stdoutOut = stdoutSpy.mock.calls[0]![0] as string;
+    expect(stdoutOut).toBe('"hello"\n');
+    const stderrOut = stderrSpy.mock.calls[0]![0] as string;
+    expect(stderrOut).toContain('Table format not applicable');
+  });
+
+  test('falls back to JSON for null with stderr warning', () => {
+    stdout(null, { format: 'table' });
+    expect(stdoutSpy.mock.calls[0]![0]).toBe('null\n');
+    expect(stderrSpy.mock.calls[0]![0]).toContain('Table format not applicable');
+  });
+
+  test('falls back to JSON for mixed-type array with stderr warning', () => {
+    stdout([{ id: 'A' }, 'not an object'], { format: 'table' });
+    expect(stdoutSpy.mock.calls[0]![0]).toBe('[{"id":"A"},"not an object"]\n');
+    expect(stderrSpy.mock.calls[0]![0]).toContain('Table format not applicable');
+  });
+
+  test('falls back to JSON for empty array with stderr warning', () => {
+    stdout([], { format: 'table' });
+    expect(stdoutSpy.mock.calls[0]![0]).toBe('[]\n');
+    expect(stderrSpy.mock.calls[0]![0]).toContain('Table format not applicable');
+  });
+
+  test('respects --fields before rendering', () => {
+    stdout({ id: 'A', status: 'Open', urgency: 50 }, { format: 'table', fields: 'id,status' });
+    const out = stdoutSpy.mock.calls[0]![0] as string;
+    expect(out).toContain('id');
+    expect(out).toContain('status');
+    expect(out).not.toContain('urgency');
+  });
+
+  test('--quiet suppresses fallback warning but still emits JSON', () => {
+    stdout('hello', { format: 'table', quiet: true });
+    expect(stdoutSpy.mock.calls[0]![0]).toBe('"hello"\n');
+    expect(stderrSpy).not.toHaveBeenCalled();
+  });
+});
+
 describe('stdout --format yaml', () => {
   let writeSpy: ReturnType<typeof jest.spyOn>;
   beforeEach(() => {
