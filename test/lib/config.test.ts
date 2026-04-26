@@ -50,9 +50,7 @@ describe('getConfig', () => {
     seedFile(
       CONFIG_PATH,
       JSON.stringify({
-        profiles: {
-          default: { baseUrl: 'https://pega.example.com', clientId: 'fromfile', clientSecret: 's' },
-        },
+        default: { baseUrl: 'https://pega.example.com', clientId: 'fromfile', clientSecret: 's' },
       }),
     );
     const cfg = getConfig('default');
@@ -63,7 +61,7 @@ describe('getConfig', () => {
     seedFile(
       CONFIG_PATH,
       JSON.stringify({
-        profiles: { default: { baseUrl: 'https://file.pega', clientId: 'F', clientSecret: 'F' } },
+        default: { baseUrl: 'https://file.pega', clientId: 'F', clientSecret: 'F' },
       }),
     );
     process.env.PEGA_BASE_URL = 'https://env.pega';
@@ -107,14 +105,29 @@ describe('getConfig', () => {
     seedFile(
       CONFIG_PATH,
       JSON.stringify({
-        profiles: {
-          prod: { baseUrl: 'https://prod.pega', clientId: 'P', clientSecret: 'P' },
-        },
+        prod: { baseUrl: 'https://prod.pega', clientId: 'P', clientSecret: 'P' },
       }),
     );
     const cfg = getConfig('prod');
     expect(cfg.baseUrl).toBe('https://prod.pega');
     expect(cfg.profile).toBe('prod');
+  });
+
+  test('old { profiles: { ... } } shape produces INVALID_CONFIG', () => {
+    delete process.env.PEGA_BASE_URL;
+    delete process.env.PEGA_CLIENT_ID;
+    delete process.env.PEGA_CLIENT_SECRET;
+    seedFile(
+      CONFIG_PATH,
+      JSON.stringify({
+        profiles: {
+          default: { baseUrl: 'https://pega.example.com', clientId: 'fromfile', clientSecret: 's' },
+        },
+      }),
+    );
+    expect(() => getConfig('default')).toThrow(
+      expect.objectContaining({ code: 'INVALID_CONFIG' }),
+    );
   });
 });
 

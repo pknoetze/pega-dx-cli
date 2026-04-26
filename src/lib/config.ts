@@ -14,9 +14,8 @@ export interface TokenResult {
   expiresAt: string;
 }
 
-interface FileConfigShape {
-  profiles?: Record<string, Partial<Omit<PegaConfig, 'profile'>>>;
-}
+type ProfileBlock = Partial<Omit<PegaConfig, 'profile'>>;
+type FileConfigShape = Record<string, ProfileBlock>;
 
 interface TokenFileShape {
   [profile: string]: { accessToken: string; expiresAt: string };
@@ -65,7 +64,7 @@ function readFileConfig(): FileConfigShape {
 
 export function getConfig(profile = 'default'): PegaConfig {
   const fileCfg = readFileConfig();
-  const profileCfg = fileCfg.profiles?.[profile] ?? {};
+  const profileCfg = fileCfg[profile] ?? {};
   const baseUrlRaw =
     process.env.PEGA_BASE_URL ?? profileCfg.baseUrl ?? undefined;
   const clientId = process.env.PEGA_CLIENT_ID ?? profileCfg.clientId ?? undefined;
