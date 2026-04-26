@@ -1,7 +1,8 @@
+import * as yaml from 'js-yaml';
 import type { NormalizedError } from './errors.js';
 
 export interface OutputOpts {
-  format: 'json' | 'compact';
+  format: 'json' | 'compact' | 'yaml';
   fields?: string;
 }
 
@@ -30,8 +31,10 @@ function filterFields(data: unknown, fields: string): unknown {
   return out;
 }
 
-function serialize(data: unknown, format: 'json' | 'compact'): string {
-  return format === 'compact' ? JSON.stringify(data) : JSON.stringify(data, null, 2);
+function serialize(data: unknown, format: OutputOpts['format']): string {
+  if (format === 'compact') return JSON.stringify(data);
+  if (format === 'yaml') return yaml.dump(data);
+  return JSON.stringify(data, null, 2);
 }
 
 export function stdout(data: unknown, opts: OutputOpts): void {

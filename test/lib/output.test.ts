@@ -1,4 +1,4 @@
-import { describe, test, expect, afterEach } from '@jest/globals';
+import { describe, test, expect, afterEach, beforeEach, jest } from '@jest/globals';
 import { stdout, stderr, error, dryRun, redactAuthHeader } from '../../src/lib/output.js';
 import { captureOutput, type CapturedOutput } from '../helpers/capture-output.js';
 
@@ -135,5 +135,36 @@ describe('redactAuthHeader', () => {
     const input = { Authorization: 'Bearer abc' };
     redactAuthHeader(input);
     expect(input.Authorization).toBe('Bearer abc');
+  });
+});
+
+describe('stdout --format yaml', () => {
+  let writeSpy: ReturnType<typeof jest.spyOn>;
+  beforeEach(() => {
+    writeSpy = jest.spyOn(process.stdout, 'write').mockImplementation(() => true);
+  });
+  afterEach(() => writeSpy.mockRestore());
+
+  test('serialises object as block-style YAML', () => {
+    stdout({ id: 'CASE-1', status: 'Open' }, { format: 'yaml' });
+    const out = writeSpy.mock.calls[0][0] as string;
+    expect(out).toContain('id: CASE-1');
+    expect(out).toContain('status: Open');
+    expect(out.endsWith('\n')).toBe(true);
+  });
+
+  test('serialises array of objects as YAML list', () => {
+    stdout([{ id: 'CASE-1' }, { id: 'CASE-2' }], { format: 'yaml' });
+    const out = writeSpy.mock.calls[0][0] as string;
+    expect(out).toContain('- id: CASE-1');
+    expect(out).toContain('- id: CASE-2');
+  });
+
+  test('respects --fields before serialising', () => {
+    stdout({ id: 'CASE-1', status: 'Open', urgency: 50 }, { format: 'yaml', fields: 'id,status' });
+    const out = writeSpy.mock.calls[0][0] as string;
+    expect(out).toContain('id: CASE-1');
+    expect(out).toContain('status: Open');
+    expect(out).not.toContain('urgency');
   });
 });
