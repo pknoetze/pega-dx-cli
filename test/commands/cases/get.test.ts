@@ -92,4 +92,32 @@ describe('cases get', () => {
     const err = parseFirstJson(captured.stderr) as Record<string, unknown>;
     expect(err).toMatchObject({ error: true, code: 'NOT_FOUND', httpStatus: 404 });
   });
+
+  test('--format yaml emits YAML', async () => {
+    mockOAuthSuccess('https://pega.example.com');
+    nock('https://pega.example.com')
+      .get('/prweb/api/application/v2/cases/CASE-1')
+      .reply(200, { id: 'CASE-1', status: 'Open' });
+
+    captured = captureOutput();
+    await CasesGet.run(['CASE-1', '--format', 'yaml']);
+    const out = captured.stdout.join('');
+    expect(out).toContain('id: CASE-1');
+    expect(out).toContain('status: Open');
+  });
+
+  test('--format table emits a table', async () => {
+    mockOAuthSuccess('https://pega.example.com');
+    nock('https://pega.example.com')
+      .get('/prweb/api/application/v2/cases/CASE-1')
+      .reply(200, { id: 'CASE-1', status: 'Open' });
+
+    captured = captureOutput();
+    await CasesGet.run(['CASE-1', '--format', 'table']);
+    const out = captured.stdout.join('');
+    expect(out).toContain('id');
+    expect(out).toContain('CASE-1');
+    expect(out).toContain('status');
+    expect(out).toContain('Open');
+  });
 });

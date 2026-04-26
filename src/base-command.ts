@@ -9,8 +9,8 @@ export type BaseFlags = Interfaces.InferredFlags<typeof BaseCommand.baseFlags>;
 export abstract class BaseCommand extends Command {
   static override baseFlags = {
     format: Flags.string({
-      description: 'Output format (json, compact)',
-      options: ['json', 'compact'],
+      description: 'Output format (json, compact, yaml, table)',
+      options: ['json', 'compact', 'yaml', 'table'],
       default: 'json',
     }),
     fields: Flags.string({
@@ -57,7 +57,11 @@ export abstract class BaseCommand extends Command {
   }
 
   protected emit(data: unknown, flags: BaseFlags): void {
-    stdout(data, { format: flags.format as 'json' | 'compact', fields: flags.fields });
+    stdout(data, {
+      format: flags.format as 'json' | 'compact' | 'yaml' | 'table',
+      fields: flags.fields,
+      quiet: flags.quiet,
+    });
   }
 
   protected emitDryRun(req: DryRunRequest): void {
