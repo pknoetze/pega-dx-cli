@@ -1,4 +1,5 @@
 import { fromHttpResponse, fromNetworkError } from './errors.js';
+import { redactAuthHeader } from './output.js';
 
 export interface RequestOpts {
   timeoutMs?: number;
@@ -111,7 +112,7 @@ async function doRequest<T>(
   });
 
   deps.onVerbose?.(
-    { method, url, headers, body: serialized },
+    { method, url, headers: redactAuthHeader(headers), body: serialized },
     { status: response.status, headers: responseHeaders, body: parsed },
   );
 

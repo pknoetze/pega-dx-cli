@@ -1,6 +1,6 @@
-import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import nock from 'nock';
-import { createPegaApiClient } from '../../src/lib/api-client.js';
+import { createPegaApiClient, type LoggedRequest } from '../../src/lib/api-client.js';
 
 const BASE = 'https://pega.example.com';
 const V2 = `${BASE}/prweb/api/application/v2`;
@@ -135,5 +135,29 @@ describe('createPegaApiClient', () => {
       .matchHeader('x-origin-channel', 'Mobile')
       .reply(200, {});
     await client().get('/cases/X', { extraHeaders: { 'x-origin-channel': 'Mobile' } });
+  });
+
+  test('onVerbose callback receives redacted Authorization header', async () => {
+    nock('https://pega.example.com', {
+      reqheaders: { authorization: /^Bearer .+/ },
+    })
+      .get('/prweb/api/application/v2/cases/A')
+      .reply(200, { id: 'A' });
+
+    const onVerbose = jest.fn();
+    const c = createPegaApiClient({
+      baseUrl: 'https://pega.example.com',
+      tokenProvider: async () => 'real-token-xyz',
+      onVerbose,
+    });
+
+    await c.get('/cases/A');
+
+    expect(onVerbose).toHaveBeenCalledTimes(1);
+    const req = onVerbose.mock.calls[0]![0] as LoggedRequest;
+    expect(req.headers.Authorization ?? req.headers.authorization).toBe('[REDACTED]');
+    // The real bearer token must never be observable through the callback.
+    const stringified = JSON.stringify(req.headers);
+    expect(stringified).not.toContain('real-token-xyz');
   });
 });
