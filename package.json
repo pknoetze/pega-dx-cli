@@ -1,5 +1,5 @@
 {
-  "name": "@pknoetze/pega-dx-cli",
+  "name": "pega-dx-cli",
   "version": "0.2.0",
   "description": "CLI for Pega Infinity DX API V2 (Constellation)",
   "type": "module",

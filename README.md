@@ -1,11 +1,11 @@
-# @pknoetze/pega-dx-cli
+# pega-dx-cli
 
 A developer-first command-line interface for the Pega Infinity™ DX API V2 (Constellation DX API), designed for both humans at the terminal and LLM coding agents.
 
 ## Installation
 
 ```bash
-npm install -g @pknoetze/pega-dx-cli
+npm install -g pega-dx-cli
 ```
 
 This installs the `pega` binary. Requires Node.js 22 or newer.
@@ -176,6 +176,6 @@ Run `pega auth diagnose` to identify where the problem is:
 
 ## Architecture and scope
 
-This CLI implements Phase 1 of `@pknoetze/pega-dx-cli`. Phase 2 adds the remaining Pega tool categories (attachments, data views, case types, participants, followers, related cases, tags, documents), a `table` output format, and an `--interactive` wizard mode for assignment flows. Phase 3 delivers standalone binaries and shell completions.
+This CLI implements Phase 1 of `pega-dx-cli`. Phase 2 adds the remaining Pega tool categories (attachments, data views, case types, participants, followers, related cases, tags, documents), a `table` output format, and an `--interactive` wizard mode for assignment flows. Phase 3 delivers standalone binaries and shell completions.
 
 The API V2 client is ported from the [pega-dx-mcp](https://github.com/marco-looy/pega-dx-mcp) MCP server. Only Constellation DX API (V2) is supported; V1 is out of scope.

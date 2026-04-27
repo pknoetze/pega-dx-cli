@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers-extended-cc:subagent-driven-development (recommended) or superpowers-extended-cc:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build `@pknoetze/pega-dx-cli` Phase 1 — a TypeScript oclif CLI with 9 commands (`auth login/ping/diagnose`, `cases get/create/delete`, `assignments get/get-next/perform`) backed by a ported Pega DX API V2 client, per the approved design at [docs/superpowers/specs/2026-04-24-pega-dx-cli-phase-1-design.md](../specs/2026-04-24-pega-dx-cli-phase-1-design.md).
+**Goal:** Build `pega-dx-cli` Phase 1 — a TypeScript oclif CLI with 9 commands (`auth login/ping/diagnose`, `cases get/create/delete`, `assignments get/get-next/perform`) backed by a ported Pega DX API V2 client, per the approved design at [docs/superpowers/specs/2026-04-24-pega-dx-cli-phase-1-design.md](../specs/2026-04-24-pega-dx-cli-phase-1-design.md).
 
 **Architecture:** Layered top-down build (errors → output → config → api-client → base-command → commands). Strict TDD — red → green → refactor per unit. Standard headers and URLs ported verbatim from the MCP reference (`https://github.com/marco-looy/pega-dx-mcp`). Config owns OAuth + token cache; api-client receives tokens via an injected `TokenProvider` function.
 
@@ -95,7 +95,7 @@ These facts come from `https://github.com/marco-looy/pega-dx-mcp` and anchor the
 
 ```json
 {
-  "name": "@pknoetze/pega-dx-cli",
+  "name": "pega-dx-cli",
   "version": "0.1.0",
   "description": "CLI for Pega Infinity DX API V2 (Constellation)",
   "type": "module",
@@ -3357,14 +3357,14 @@ git commit -m "Implement assignments get/get-next/perform with eTag auto-fetch"
 - [ ] **Step 1: Write `README.md`**
 
 ```markdown
-# @pknoetze/pega-dx-cli
+# pega-dx-cli
 
 A developer-first command-line interface for the Pega Infinity™ DX API V2 (Constellation DX API), designed for both humans at the terminal and LLM coding agents.
 
 ## Installation
 
 ```bash
-npm install -g @pknoetze/pega-dx-cli
+npm install -g pega-dx-cli
 ```
 
 This installs the `pega` binary. Requires Node.js 22 or newer.
@@ -3489,7 +3489,7 @@ Run `pega auth diagnose` to identify where the problem is:
 
 ## Architecture and scope
 
-This CLI implements Phase 1 of `@pknoetze/pega-dx-cli`. Phase 2 adds the remaining Pega tool categories (attachments, data views, case types, participants, followers, related cases, tags, documents), a `table` output format, and an `--interactive` wizard mode for assignment flows. Phase 3 delivers standalone binaries and shell completions.
+This CLI implements Phase 1 of `pega-dx-cli`. Phase 2 adds the remaining Pega tool categories (attachments, data views, case types, participants, followers, related cases, tags, documents), a `table` output format, and an `--interactive` wizard mode for assignment flows. Phase 3 delivers standalone binaries and shell completions.
 
 The API V2 client is ported from the [pega-dx-mcp](https://github.com/marco-looy/pega-dx-mcp) MCP server. Only Constellation DX API (V2) is supported; V1 is out of scope.
 ```

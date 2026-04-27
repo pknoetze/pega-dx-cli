@@ -8,7 +8,7 @@
 
 ## 1. Overview
 
-Build `@pknoetze/pega-dx-cli` — an oclif-based TypeScript CLI that wraps the Pega Infinity DX API V2 (Constellation). Phase 1 delivers the core infrastructure (API client, config/auth store, output formatter, global flags) plus 9 commands across three groups: `pega auth`, `pega cases`, `pega assignments`.
+Build `pega-dx-cli` — an oclif-based TypeScript CLI that wraps the Pega Infinity DX API V2 (Constellation). Phase 1 delivers the core infrastructure (API client, config/auth store, output formatter, global flags) plus 9 commands across three groups: `pega auth`, `pega cases`, `pega assignments`.
 
 The CLI is explicitly designed as an alternative to the existing `pega-dx-mcp` MCP server; it targets LLM coding agents that pay a heavy token tax for MCP's 67 tool schemas. Same API client underneath — swap the MCP transport for a CLI transport.
 
