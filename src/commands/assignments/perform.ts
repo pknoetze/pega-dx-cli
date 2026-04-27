@@ -1,7 +1,7 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { getConfig } from '../../lib/config.js';
-import { readDataFlag } from '../../lib/input.js';
+import { parseDataInput } from '../../lib/input.js';
 import { type NormalizedError } from '../../lib/errors.js';
 
 export default class AssignmentsPerform extends BaseCommand {
@@ -25,7 +25,7 @@ export default class AssignmentsPerform extends BaseCommand {
     let content: unknown;
     if (flags.data) {
       try {
-        content = await readDataFlag(flags.data);
+        content = await parseDataInput(flags.data);
       } catch (err) {
         this.fail(err);
       }

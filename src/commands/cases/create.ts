@@ -1,7 +1,7 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { getConfig } from '../../lib/config.js';
-import { readDataFlag } from '../../lib/input.js';
+import { parseDataInput } from '../../lib/input.js';
 
 export default class CasesCreate extends BaseCommand {
   static override description = 'Create a new Pega case (V2)';
@@ -21,7 +21,7 @@ export default class CasesCreate extends BaseCommand {
     let content: unknown = undefined;
     if (flags.data) {
       try {
-        content = await readDataFlag(flags.data);
+        content = await parseDataInput(flags.data);
       } catch (err) {
         this.fail(err);
       }

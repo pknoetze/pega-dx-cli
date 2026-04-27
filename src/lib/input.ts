@@ -13,7 +13,7 @@ async function readStdin(): Promise<string> {
   return Buffer.concat(chunks).toString('utf-8');
 }
 
-export async function readDataFlag(value: string): Promise<unknown> {
+export async function parseDataInput(value: string): Promise<unknown> {
   let raw: string;
   if (value === '-') {
     raw = await readStdin();
