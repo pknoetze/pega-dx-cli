@@ -18,7 +18,8 @@ type ProfileBlock = Partial<Omit<PegaConfig, 'profile'>>;
 type FileConfigShape = Record<string, ProfileBlock>;
 
 interface TokenFileShape {
-  [profile: string]: { accessToken: string; expiresAt: string };
+  accessToken: string;
+  expiresAt: string;
 }
 
 const REFRESH_BUFFER_MS = 60_000;
@@ -41,8 +42,8 @@ function configDir(): string {
 function configPath(): string {
   return path.join(configDir(), 'config.json');
 }
-function tokenPath(): string {
-  return path.join(configDir(), 'token.json');
+function tokenPath(profile: string): string {
+  return path.join(configDir(), `token.${profile}.json`);
 }
 
 function invalidConfig(message: string): NormalizedError {
@@ -83,25 +84,31 @@ export function getConfig(profile = 'default'): PegaConfig {
   };
 }
 
-function readTokenFile(): TokenFileShape {
+function readTokenFile(profile: string): TokenFileShape | undefined {
   try {
-    const parsed: unknown = JSON.parse(fs.readFileSync(tokenPath(), 'utf-8'));
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+    const parsed: unknown = JSON.parse(fs.readFileSync(tokenPath(profile), 'utf-8'));
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      !Array.isArray(parsed) &&
+      typeof (parsed as TokenFileShape).accessToken === 'string' &&
+      typeof (parsed as TokenFileShape).expiresAt === 'string'
+    ) {
       return parsed as TokenFileShape;
     }
   } catch {
     /* ignore parse / ENOENT */
   }
-  return {};
+  return undefined;
 }
 
-function writeTokenFile(data: TokenFileShape): void {
+function writeTokenFile(profile: string, data: TokenFileShape): void {
   const dir = configDir();
   fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(tokenPath(), JSON.stringify(data, null, 2), { mode: 0o600 });
+  fs.writeFileSync(tokenPath(profile), JSON.stringify(data, null, 2), { mode: 0o600 });
   if (process.platform !== 'win32') {
     try {
-      fs.chmodSync(tokenPath(), 0o600);
+      fs.chmodSync(tokenPath(profile), 0o600);
     } catch {
       /* chmod may not be supported on all filesystems */
     }
@@ -164,8 +171,7 @@ export async function getToken(opts: {
   const cfg = getConfig(opts.profile);
 
   if (!noCache && !opts.forceFresh) {
-    const store = readTokenFile();
-    const cached = store[opts.profile];
+    const cached = readTokenFile(opts.profile);
     if (cached) {
       const remaining = new Date(cached.expiresAt).getTime() - Date.now();
       if (remaining > REFRESH_BUFFER_MS) {
@@ -177,17 +183,16 @@ export async function getToken(opts: {
   const fresh = await fetchToken(cfg);
 
   if (!noCache) {
-    const store = readTokenFile();
-    store[opts.profile] = fresh;
-    writeTokenFile(store);
+    writeTokenFile(opts.profile, fresh);
   }
 
   return fresh;
 }
 
 export function clearToken(profile: string): void {
-  const store = readTokenFile();
-  if (!store[profile]) return;
-  delete store[profile];
-  writeTokenFile(store);
+  try {
+    fs.unlinkSync(tokenPath(profile));
+  } catch (err) {
+    if ((err as { code?: string }).code !== 'ENOENT') throw err;
+  }
 }

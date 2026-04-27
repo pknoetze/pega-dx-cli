@@ -67,14 +67,12 @@ describe('auth login', () => {
   });
 
   test('--no-cache does not read or write token file', async () => {
-    // Pre-seed a token file so we can verify it remains untouched.
+    // Pre-seed the per-profile token file so we can verify it remains untouched.
     seedFile(
-      `${process.env.HOME}/.pega-cli/token.json`,
+      `${process.env.HOME}/.pega-cli/token.default.json`,
       JSON.stringify({
-        default: {
-          accessToken: 'previously-cached',
-          expiresAt: new Date(Date.now() + 600_000).toISOString(),
-        },
+        accessToken: 'previously-cached',
+        expiresAt: new Date(Date.now() + 600_000).toISOString(),
       }),
     );
 
@@ -82,12 +80,13 @@ describe('auth login', () => {
     captured = captureOutput();
     await AuthLogin.run(['--no-cache']);
 
-    // Confirm the OAuth call happened (output mentions a fresh token, not the cached one).
+    // Confirm the OAuth call happened (output reflects a fresh token, not the cached one).
     const out = JSON.parse(captured.stdout.join(''));
     expect(out.authenticated).toBe(true);
 
-    // Confirm the token file was NOT modified — still contains the previously-cached token.
-    const stored = JSON.parse(readMockFile(`${process.env.HOME}/.pega-cli/token.json`));
-    expect(stored.default.accessToken).toBe('previously-cached');
+    // Confirm the per-profile token file was NOT modified — still contains the previously-cached token.
+    // Shape is flat { accessToken, expiresAt } — no profile-key wrapper.
+    const stored = JSON.parse(readMockFile(`${process.env.HOME}/.pega-cli/token.default.json`));
+    expect(stored.accessToken).toBe('previously-cached');
   });
 });

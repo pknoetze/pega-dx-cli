@@ -5,7 +5,10 @@ import { mockOAuthSuccess, mockOAuthFailure } from '../helpers/mock-pega-api.js'
 
 const HOME = '/home/test';
 const CONFIG_PATH = `${HOME}/.pega-cli/config.json`;
-const TOKEN_PATH = `${HOME}/.pega-cli/token.json`;
+
+function tokenPathFor(profile: string): string {
+  return `${HOME}/.pega-cli/token.${profile}.json`;
+}
 
 jest.unstable_mockModule('node:fs', async () => {
   const memfs = await import('memfs');
@@ -140,12 +143,10 @@ describe('getToken', () => {
 
   test('returns cached token when still valid', async () => {
     seedFile(
-      TOKEN_PATH,
+      tokenPathFor('default'),
       JSON.stringify({
-        default: {
-          accessToken: 'cached-t',
-          expiresAt: new Date(Date.now() + 600_000).toISOString(),
-        },
+        accessToken: 'cached-t',
+        expiresAt: new Date(Date.now() + 600_000).toISOString(),
       }),
     );
     const t = await getToken({ noCache: false, profile: 'default' });
@@ -154,12 +155,10 @@ describe('getToken', () => {
 
   test('fetches fresh token when cache expired', async () => {
     seedFile(
-      TOKEN_PATH,
+      tokenPathFor('default'),
       JSON.stringify({
-        default: {
-          accessToken: 'old',
-          expiresAt: new Date(Date.now() - 10_000).toISOString(),
-        },
+        accessToken: 'old',
+        expiresAt: new Date(Date.now() - 10_000).toISOString(),
       }),
     );
     mockOAuthSuccess('https://pega.example.com', 'new-token');
@@ -169,12 +168,10 @@ describe('getToken', () => {
 
   test('refreshes when less than 60 seconds remain', async () => {
     seedFile(
-      TOKEN_PATH,
+      tokenPathFor('default'),
       JSON.stringify({
-        default: {
-          accessToken: 'almost-expired',
-          expiresAt: new Date(Date.now() + 30_000).toISOString(),
-        },
+        accessToken: 'almost-expired',
+        expiresAt: new Date(Date.now() + 30_000).toISOString(),
       }),
     );
     mockOAuthSuccess('https://pega.example.com', 'refreshed');
@@ -197,7 +194,7 @@ describe('getToken', () => {
   test('writes token file with 0600 mode on Unix', async () => {
     mockOAuthSuccess('https://pega.example.com', 'stored');
     await getToken({ noCache: false, profile: 'default' });
-    const stat = mockFileStat(TOKEN_PATH);
+    const stat = mockFileStat(tokenPathFor('default'));
     expect(stat).not.toBeNull();
     if (process.platform !== 'win32') {
       expect(stat!.mode & 0o777).toBe(0o600);
@@ -206,12 +203,10 @@ describe('getToken', () => {
 
   test('noCache=true bypasses token file reads', async () => {
     seedFile(
-      TOKEN_PATH,
+      tokenPathFor('default'),
       JSON.stringify({
-        default: {
-          accessToken: 'cached',
-          expiresAt: new Date(Date.now() + 600_000).toISOString(),
-        },
+        accessToken: 'cached',
+        expiresAt: new Date(Date.now() + 600_000).toISOString(),
       }),
     );
     mockOAuthSuccess('https://pega.example.com', 'fresh');
@@ -222,7 +217,7 @@ describe('getToken', () => {
   test('noCache=true never writes token file', async () => {
     mockOAuthSuccess('https://pega.example.com', 'no-write');
     await getToken({ noCache: true, profile: 'default' });
-    const stat = mockFileStat(TOKEN_PATH);
+    const stat = mockFileStat(tokenPathFor('default'));
     expect(stat).toBeNull();
   });
 
@@ -230,7 +225,7 @@ describe('getToken', () => {
     process.env.PEGA_NO_CACHE = 'true';
     mockOAuthSuccess('https://pega.example.com', 'env-no-cache');
     await getToken({ noCache: false, profile: 'default' });
-    const stat = mockFileStat(TOKEN_PATH);
+    const stat = mockFileStat(tokenPathFor('default'));
     expect(stat).toBeNull();
   });
 
@@ -244,19 +239,17 @@ describe('getToken', () => {
 
   test('forceFresh=true ignores valid cache but writes result', async () => {
     seedFile(
-      TOKEN_PATH,
+      tokenPathFor('default'),
       JSON.stringify({
-        default: {
-          accessToken: 'cached',
-          expiresAt: new Date(Date.now() + 600_000).toISOString(),
-        },
+        accessToken: 'cached',
+        expiresAt: new Date(Date.now() + 600_000).toISOString(),
       }),
     );
     mockOAuthSuccess('https://pega.example.com', 'fresh');
     const t = await getToken({ noCache: false, profile: 'default', forceFresh: true });
     expect(t.accessToken).toBe('fresh');
-    const stored = JSON.parse(readMockFile(TOKEN_PATH));
-    expect(stored.default.accessToken).toBe('fresh');
+    const stored = JSON.parse(readMockFile(tokenPathFor('default')));
+    expect(stored.accessToken).toBe('fresh');
   });
 
   test('defaults expires_in to 3600s when missing', async () => {
@@ -290,20 +283,65 @@ describe('getToken', () => {
 
   test('forceFresh=true + noCache=true skips both read and write', async () => {
     seedFile(
-      TOKEN_PATH,
+      tokenPathFor('default'),
       JSON.stringify({
-        default: {
-          accessToken: 'cached',
-          expiresAt: new Date(Date.now() + 600_000).toISOString(),
-        },
+        accessToken: 'cached',
+        expiresAt: new Date(Date.now() + 600_000).toISOString(),
       }),
     );
     mockOAuthSuccess('https://pega.example.com', 'fresh-and-uncached');
     const t = await getToken({ noCache: true, profile: 'default', forceFresh: true });
     expect(t.accessToken).toBe('fresh-and-uncached');
     // Token file should still contain the OLD cached value (no write occurred).
-    const stored = JSON.parse(readMockFile(TOKEN_PATH));
-    expect(stored.default.accessToken).toBe('cached');
+    const stored = JSON.parse(readMockFile(tokenPathFor('default')));
+    expect(stored.accessToken).toBe('cached');
+  });
+
+  test('getToken --profile staging writes only token.staging.json', async () => {
+    process.env.PEGA_CLIENT_SECRET = 's';
+    delete process.env.PEGA_NO_CACHE;
+    mockOAuthSuccess('https://pega.example.com');
+
+    await getToken({ noCache: false, profile: 'staging' });
+
+    // The staging file exists:
+    expect(mockFileStat(tokenPathFor('staging'))).not.toBeNull();
+    // The default file does NOT exist (we never logged in to default):
+    expect(mockFileStat(tokenPathFor('default'))).toBeNull();
+  });
+
+  test('legacy token.json is ignored on read', async () => {
+    process.env.PEGA_CLIENT_SECRET = 's';
+    delete process.env.PEGA_NO_CACHE;
+    mockOAuthSuccess('https://pega.example.com');
+
+    // Plant a legacy token.json with cached token for 'default' (old wrapped shape).
+    seedFile(
+      `${HOME}/.pega-cli/token.json`,
+      JSON.stringify({
+        default: {
+          accessToken: 'legacy-cached',
+          expiresAt: new Date(Date.now() + 600_000).toISOString(),
+        },
+      }),
+    );
+
+    const token = await getToken({ noCache: false, profile: 'default' });
+    // Legacy cache must NOT be used — an OAuth round-trip produces a fresh token.
+    expect(token.accessToken).not.toBe('legacy-cached');
+  });
+
+  test('per-profile token file has 0600 mode on Unix (Linux/macOS)', async () => {
+    if (process.platform === 'win32') return;
+    process.env.PEGA_CLIENT_SECRET = 's';
+    delete process.env.PEGA_NO_CACHE;
+    mockOAuthSuccess('https://pega.example.com');
+
+    await getToken({ noCache: false, profile: 'default' });
+
+    const stat = mockFileStat(tokenPathFor('default'));
+    expect(stat).not.toBeNull();
+    expect(stat!.mode & 0o777).toBe(0o600);
   });
 });
 
@@ -314,21 +352,28 @@ describe('clearToken', () => {
     process.env.PEGA_CLIENT_SECRET = 's';
   });
 
-  test('removes profile entry from token file', () => {
+  test('removes per-profile token file and leaves others intact', () => {
     seedFile(
-      TOKEN_PATH,
-      JSON.stringify({
-        default: { accessToken: 'x', expiresAt: '2099-01-01T00:00:00Z' },
-        prod: { accessToken: 'y', expiresAt: '2099-01-01T00:00:00Z' },
-      }),
+      tokenPathFor('default'),
+      JSON.stringify({ accessToken: 'x', expiresAt: '2099-01-01T00:00:00Z' }),
+    );
+    seedFile(
+      tokenPathFor('prod'),
+      JSON.stringify({ accessToken: 'y', expiresAt: '2099-01-01T00:00:00Z' }),
     );
     clearToken('default');
-    const stored = JSON.parse(readMockFile(TOKEN_PATH));
-    expect(stored.default).toBeUndefined();
-    expect(stored.prod).toBeDefined();
+    // default file is gone:
+    expect(mockFileStat(tokenPathFor('default'))).toBeNull();
+    // prod file is untouched:
+    const stored = JSON.parse(readMockFile(tokenPathFor('prod')));
+    expect(stored.accessToken).toBe('y');
   });
 
   test('no-op when token file does not exist', () => {
     expect(() => clearToken('default')).not.toThrow();
+  });
+
+  test('clearToken is ENOENT-tolerant for unknown profile', () => {
+    expect(() => clearToken('nonexistent')).not.toThrow();
   });
 });
