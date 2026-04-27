@@ -180,3 +180,45 @@ describe('catch + fail', () => {
     expect(err.message).toBe('Unknown error');
   });
 });
+
+// Helper: construct a TestCmd instance, spy on exit, call fail() directly, and return the captured exit code.
+function callFailWith(code: string): number {
+  const cmd = new (class extends BaseCommand {
+    static override id = 'test-exit';
+    async run(): Promise<void> { /* no-op */ }
+  })([], {} as never);
+
+  let captured: number | undefined;
+  jest
+    .spyOn(cmd as unknown as { exit: (c: number) => void }, 'exit')
+    .mockImplementation((c: number) => {
+      captured = c;
+      throw new Error(`__exit__:${c}`);
+    });
+
+  try {
+    (cmd as unknown as { fail: (e: unknown) => void }).fail({
+      code,
+      message: 'test',
+      httpStatus: 0,
+    });
+  } catch {
+    /* fail() throws via the exit spy */
+  }
+  return captured!;
+}
+
+describe('BaseCommand.fail() exit codes', () => {
+  test('INVALID_CONFIG → exit 2', () => {
+    expect(callFailWith('INVALID_CONFIG')).toBe(2);
+  });
+  test('INVALID_ARGS → exit 2', () => {
+    expect(callFailWith('INVALID_ARGS')).toBe(2);
+  });
+  test('NOT_FOUND → exit 1', () => {
+    expect(callFailWith('NOT_FOUND')).toBe(1);
+  });
+  test('TIMEOUT → exit 1', () => {
+    expect(callFailWith('TIMEOUT')).toBe(1);
+  });
+});

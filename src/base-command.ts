@@ -2,7 +2,7 @@ import { Command, Flags, type Interfaces } from '@oclif/core';
 import { createPegaApiClient, type PegaApiClient } from './lib/api-client.js';
 import { getConfig, getToken } from './lib/config.js';
 import { stdout, stderr, error, dryRun, type DryRunRequest } from './lib/output.js';
-import { isNormalizedError, type NormalizedError } from './lib/errors.js';
+import { isNormalizedError, exitCodeFor, type NormalizedError } from './lib/errors.js';
 
 export type BaseFlags = Interfaces.InferredFlags<typeof BaseCommand.baseFlags>;
 
@@ -73,7 +73,7 @@ export abstract class BaseCommand extends Command {
       ? err
       : { code: 'UNKNOWN', message: (err as Error).message || 'Unknown error', httpStatus: 0 };
     error(normalized);
-    this.exit(1);
+    this.exit(exitCodeFor(normalized));
   }
 
   override async catch(err: Error & { oclif?: { exit?: number | false } }): Promise<never> {
