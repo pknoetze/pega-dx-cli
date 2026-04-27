@@ -22,6 +22,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests",
+    "prepare": "npm run build && oclif manifest",
     "prepack": "npm run clean && npm run build && oclif manifest"
   },
   "oclif": {
