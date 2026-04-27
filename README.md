@@ -29,17 +29,36 @@ Configuration is read from environment variables first, falling back to `~/.pega
 
 ```json
 {
-  "profiles": {
-    "default": {
-      "baseUrl": "https://your-instance.pega.com",
-      "clientId": "...",
-      "clientSecret": "..."
-    }
+  "default": {
+    "baseUrl": "https://your-instance.pega.com",
+    "clientId": "your-client-id",
+    "clientSecret": "your-client-secret"
+  },
+  "staging": {
+    "baseUrl": "https://staging.your-instance.pega.com",
+    "clientId": "staging-client-id",
+    "clientSecret": "staging-client-secret"
   }
 }
 ```
 
-Switch profiles with `--profile <name>`.
+After creating `~/.pega-cli/config.json`, set restrictive permissions: `chmod 0600 ~/.pega-cli/config.json`. The file contains your OAuth client secret.
+
+## Profiles
+
+Use `--profile <name>` to switch between Pega environments. The CLI looks up the named block in `~/.pega-cli/config.json`. Environment variables (`PEGA_BASE_URL`, `PEGA_CLIENT_ID`, `PEGA_CLIENT_SECRET`) still take precedence over file config.
+
+```bash
+# Authenticate the staging profile
+pega auth login --profile staging
+
+# Run a command against staging
+pega cases get CASE-123 --profile staging
+```
+
+The token cache is namespaced per profile: `~/.pega-cli/token.default.json`, `~/.pega-cli/token.staging.json`, etc. Each file is created with mode `0600` on Unix.
+
+If you have a legacy `~/.pega-cli/token.json` from before Phase 2a, it is ignored by the CLI and safe to delete.
 
 ## Quick start
 
@@ -73,7 +92,7 @@ Every command accepts these:
 
 | Flag | Default | Description |
 |---|---|---|
-| `--format` | `json` | Output format: `json` or `compact` |
+| `--format` | `json` | Output format: `json`, `compact`, `yaml`, or `table` |
 | `--fields` | — | Comma-separated top-level fields to include |
 | `--dry-run` | `false` | Print HTTP request (redacted) and exit 0 |
 | `--quiet` | `false` | Suppress stderr progress/warning output (structured errors still emit) |
@@ -89,11 +108,38 @@ Every command accepts these:
 - File: `--data @path/to/file.json`
 - Stdin: `--data -` (pipe JSON via stdin)
 
+## Output formats
+
+| `--format` | Description |
+|---|---|
+| `json` (default) | Pretty-printed JSON |
+| `compact` | Minified JSON, one line |
+| `yaml` | YAML, useful for diffs and human reading |
+| `table` | Human-readable table; falls back to JSON for shapes that can't be tabulated |
+
+```bash
+# JSON (default)
+pega cases get CASE-123
+
+# Compact JSON for piping
+pega cases get CASE-123 --format compact | jq '.id'
+
+# YAML for human reading
+pega cases get CASE-123 --format yaml
+
+# Table for terminal browsing
+pega cases get CASE-123 --format table
+```
+
+`--fields <a,b,c>` filters top-level keys before serialization and works with all four formats.
+
 ## Exit codes
 
-- `0` — success (including `auth diagnose` with failed checks and `ping` with unreachable server — the command succeeded at reporting status)
-- `1` — API/runtime error (network, auth failure, 4xx/5xx)
-- `2` — invalid arguments or missing configuration
+| Code | Meaning |
+|---|---|
+| 0 | Success |
+| 1 | API or runtime error (network, timeout, 4xx/5xx, etc.) |
+| 2 | Invalid arguments or configuration (`INVALID_CONFIG`, `INVALID_ARGS`, oclif parse failure) |
 
 ## CI/CD usage
 
