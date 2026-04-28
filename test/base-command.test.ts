@@ -292,3 +292,105 @@ describe('BaseCommand.runGet', () => {
     expect(capturedRunGet.stderr.join('')).toContain('NOT_FOUND');
   });
 });
+
+class TestRunDelete extends BaseCommand {
+  static override id = 'test-run-delete';
+  async run(): Promise<void> {
+    const { flags } = await this.parse(TestRunDelete);
+    await this.runDelete(flags as unknown as BaseFlags, '/cases/A/tags/urgent');
+  }
+}
+
+class TestRunPost extends BaseCommand {
+  static override id = 'test-run-post';
+  async run(): Promise<void> {
+    const { flags } = await this.parse(TestRunPost);
+    await this.runPost(flags as unknown as BaseFlags, '/cases/A/followers', { user: 'U1' });
+  }
+}
+
+describe('BaseCommand.runDelete', () => {
+  beforeEach(() => {
+    process.env.PEGA_BASE_URL = 'https://pega.example.com';
+    process.env.PEGA_CLIENT_ID = 'cid';
+    process.env.PEGA_CLIENT_SECRET = 'sec';
+    process.env.PEGA_NO_CACHE = 'true';
+  });
+  afterEach(() => {
+    cleanupNock();
+    delete process.env.PEGA_BASE_URL;
+    delete process.env.PEGA_CLIENT_ID;
+    delete process.env.PEGA_CLIENT_SECRET;
+    delete process.env.PEGA_NO_CACHE;
+  });
+
+  test('happy path: DELETE emits response', async () => {
+    mockOAuthSuccess('https://pega.example.com');
+    nock('https://pega.example.com')
+      .delete('/prweb/api/application/v2/cases/A/tags/urgent')
+      .reply(200, { deleted: true });
+    const captured = captureOutput();
+    try {
+      await TestRunDelete.run([]);
+      expect(JSON.parse(captured.stdout.join(''))).toEqual({ deleted: true });
+    } finally {
+      captured.restore();
+    }
+  });
+
+  test('--dry-run shows DELETE method without Content-Type', async () => {
+    const captured = captureOutput();
+    try {
+      await TestRunDelete.run(['--dry-run']);
+      const out = JSON.parse(captured.stdout.join(''));
+      expect(out.method).toBe('DELETE');
+      expect(out.headers['Content-Type']).toBeUndefined();
+      expect(out.body).toBeUndefined();
+    } finally {
+      captured.restore();
+    }
+  });
+});
+
+describe('BaseCommand.runPost', () => {
+  beforeEach(() => {
+    process.env.PEGA_BASE_URL = 'https://pega.example.com';
+    process.env.PEGA_CLIENT_ID = 'cid';
+    process.env.PEGA_CLIENT_SECRET = 'sec';
+    process.env.PEGA_NO_CACHE = 'true';
+  });
+  afterEach(() => {
+    cleanupNock();
+    delete process.env.PEGA_BASE_URL;
+    delete process.env.PEGA_CLIENT_ID;
+    delete process.env.PEGA_CLIENT_SECRET;
+    delete process.env.PEGA_NO_CACHE;
+  });
+
+  test('happy path: POST sends body and emits response', async () => {
+    mockOAuthSuccess('https://pega.example.com');
+    nock('https://pega.example.com')
+      .post('/prweb/api/application/v2/cases/A/followers', { user: 'U1' })
+      .reply(201, { added: true });
+    const captured = captureOutput();
+    try {
+      await TestRunPost.run([]);
+      expect(JSON.parse(captured.stdout.join(''))).toEqual({ added: true });
+    } finally {
+      captured.restore();
+    }
+  });
+
+  test('--dry-run shows POST with Content-Type and body', async () => {
+    const captured = captureOutput();
+    try {
+      await TestRunPost.run(['--dry-run']);
+      const out = JSON.parse(captured.stdout.join(''));
+      expect(out.method).toBe('POST');
+      expect(out.headers['Content-Type']).toBe('application/json');
+      expect(out.body).toEqual({ user: 'U1' });
+    } finally {
+      captured.restore();
+    }
+  });
+});

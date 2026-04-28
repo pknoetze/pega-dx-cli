@@ -97,6 +97,43 @@ export abstract class BaseCommand extends Command {
     }
   }
 
+  protected async runDelete(flags: BaseFlags, path: string): Promise<void> {
+    const cfg = getConfig(flags.profile);
+    const url = `${cfg.baseUrl}/prweb/api/application/v2${path}`;
+    if (flags['dry-run']) {
+      this.emitDryRun({ method: 'DELETE', url, headers: dryRunHeadersFor('DELETE') });
+      return;
+    }
+    try {
+      const client = await this.getClient(flags);
+      const result = await client.delete(path);
+      this.emit(result, flags);
+    } catch (err) {
+      this.fail(err);
+    }
+  }
+
+  protected async runPost(flags: BaseFlags, path: string, body: unknown): Promise<void> {
+    const cfg = getConfig(flags.profile);
+    const url = `${cfg.baseUrl}/prweb/api/application/v2${path}`;
+    if (flags['dry-run']) {
+      this.emitDryRun({
+        method: 'POST',
+        url,
+        headers: dryRunHeadersFor('POST', { hasBody: true }),
+        body,
+      });
+      return;
+    }
+    try {
+      const client = await this.getClient(flags);
+      const result = await client.post(path, body);
+      this.emit(result, flags);
+    } catch (err) {
+      this.fail(err);
+    }
+  }
+
   protected fail(err: unknown): never {
     const normalized: NormalizedError = isNormalizedError(err)
       ? err
