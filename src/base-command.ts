@@ -6,6 +6,19 @@ import { isNormalizedError, exitCodeFor, type NormalizedError } from './lib/erro
 
 export type BaseFlags = Interfaces.InferredFlags<typeof BaseCommand.baseFlags>;
 
+function dryRunHeadersFor(
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+  opts: { hasBody?: boolean; requiresEtag?: boolean } = {},
+): Record<string, string> {
+  const headers: Record<string, string> = {
+    Authorization: 'Bearer <token>',
+    'x-origin-channel': 'Web',
+  };
+  if (opts.hasBody) headers['Content-Type'] = 'application/json';
+  if (opts.requiresEtag) headers['If-Match'] = '<etag-from-GET>';
+  return headers;
+}
+
 export abstract class BaseCommand extends Command {
   static override baseFlags = {
     format: Flags.string({
@@ -66,6 +79,22 @@ export abstract class BaseCommand extends Command {
 
   protected emitDryRun(req: DryRunRequest): void {
     dryRun(req);
+  }
+
+  protected async runGet(flags: BaseFlags, path: string): Promise<void> {
+    const cfg = getConfig(flags.profile);
+    const url = `${cfg.baseUrl}/prweb/api/application/v2${path}`;
+    if (flags['dry-run']) {
+      this.emitDryRun({ method: 'GET', url, headers: dryRunHeadersFor('GET') });
+      return;
+    }
+    try {
+      const client = await this.getClient(flags);
+      const result = await client.get(path);
+      this.emit(result, flags);
+    } catch (err) {
+      this.fail(err);
+    }
   }
 
   protected fail(err: unknown): never {

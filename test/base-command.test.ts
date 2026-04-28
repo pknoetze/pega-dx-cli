@@ -3,7 +3,8 @@ import nock from 'nock';
 import { Flags } from '@oclif/core';
 import { resetMockFs } from './helpers/mock-filesystem.js';
 import { captureOutput, parseFirstJson, type CapturedOutput } from './helpers/capture-output.js';
-import { mockOAuthSuccess } from './helpers/mock-pega-api.js';
+import { mockOAuthSuccess, cleanupNock } from './helpers/mock-pega-api.js';
+import type { BaseFlags } from '../src/base-command.js';
 
 jest.unstable_mockModule('node:fs', async () => {
   const memfs = await import('memfs');
@@ -220,5 +221,74 @@ describe('BaseCommand.fail() exit codes', () => {
   });
   test('TIMEOUT → exit 1', () => {
     expect(callFailWith('TIMEOUT')).toBe(1);
+  });
+});
+
+class TestRunGet extends BaseCommand {
+  static override id = 'test-run-get';
+  async run(): Promise<void> {
+    const { flags } = await this.parse(TestRunGet);
+    await this.runGet(flags as unknown as BaseFlags, '/cases/A');
+  }
+}
+
+describe('BaseCommand.runGet', () => {
+  let capturedRunGet: CapturedOutput;
+
+  beforeEach(() => {
+    process.env.PEGA_BASE_URL = 'https://pega.example.com';
+    process.env.PEGA_CLIENT_ID = 'cid';
+    process.env.PEGA_CLIENT_SECRET = 'sec';
+    process.env.PEGA_NO_CACHE = 'true';
+  });
+
+  afterEach(() => {
+    cleanupNock();
+    capturedRunGet?.restore();
+    delete process.env.PEGA_BASE_URL;
+    delete process.env.PEGA_CLIENT_ID;
+    delete process.env.PEGA_CLIENT_SECRET;
+    delete process.env.PEGA_NO_CACHE;
+  });
+
+  test('happy path: GET emits response', async () => {
+    mockOAuthSuccess('https://pega.example.com');
+    nock('https://pega.example.com')
+      .get('/prweb/api/application/v2/cases/A')
+      .reply(200, { id: 'A', status: 'Open' });
+    capturedRunGet = captureOutput();
+
+    await TestRunGet.run([]);
+
+    expect(JSON.parse(capturedRunGet.stdout.join(''))).toEqual({ id: 'A', status: 'Open' });
+  });
+
+  test('--dry-run: no HTTP call, emits dry-run JSON', async () => {
+    capturedRunGet = captureOutput();
+    await TestRunGet.run(['--dry-run']);
+    const out = JSON.parse(capturedRunGet.stdout.join(''));
+    expect(out.method).toBe('GET');
+    expect(out.url).toBe('https://pega.example.com/prweb/api/application/v2/cases/A');
+    // Authorization is redacted by emitDryRun's output.dryRun
+    expect(out.headers.Authorization).toBe('[REDACTED]');
+    expect(out.headers['x-origin-channel']).toBe('Web');
+    expect(out.headers['Content-Type']).toBeUndefined();
+  });
+
+  test('error path: 404 → fail() exits 1 with NOT_FOUND', async () => {
+    mockOAuthSuccess('https://pega.example.com');
+    nock('https://pega.example.com')
+      .get('/prweb/api/application/v2/cases/A')
+      .reply(404, { errors: [{ ID: 'PEGA-NF-1', message: 'not found' }] });
+    capturedRunGet = captureOutput();
+
+    // fail() calls this.exit(code) which throws an ExitError with oclif.exit = code.
+    // BaseCommand.catch re-throws it, so run() rejects with the ExitError.
+    let caughtError: unknown;
+    await TestRunGet.run([]).catch((e) => { caughtError = e; });
+
+    const oclifExit = (caughtError as { oclif?: { exit?: number } })?.oclif?.exit;
+    expect(oclifExit).toBe(1);
+    expect(capturedRunGet.stderr.join('')).toContain('NOT_FOUND');
   });
 });
