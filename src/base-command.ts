@@ -134,6 +134,49 @@ export abstract class BaseCommand extends Command {
     }
   }
 
+  protected async runMutateWithEtag(
+    flags: BaseFlags,
+    method: 'POST' | 'PUT' | 'PATCH',
+    parentPath: string,
+    path: string,
+    body: unknown,
+  ): Promise<void> {
+    const cfg = getConfig(flags.profile);
+    const url = `${cfg.baseUrl}/prweb/api/application/v2${path}`;
+    if (flags['dry-run']) {
+      this.emitDryRun({
+        method,
+        url,
+        headers: dryRunHeadersFor(method, { hasBody: true, requiresEtag: true }),
+        body,
+      });
+      return;
+    }
+    try {
+      const client = await this.getClient(flags);
+      const meta = await client.getWithMeta(parentPath);
+      const eTag = meta.eTag;
+      if (!eTag) {
+        throw {
+          code: 'MISSING_ETAG',
+          message: `Parent resource ${parentPath} did not include an ETag header`,
+          httpStatus: meta.status,
+        } satisfies NormalizedError;
+      }
+      let result: unknown;
+      if (method === 'PATCH') {
+        result = await client.patch(path, body, { extraHeaders: { 'If-Match': eTag } });
+      } else if (method === 'PUT') {
+        result = await client.put(path, body, { extraHeaders: { 'If-Match': eTag } });
+      } else {
+        result = await client.post(path, body, { extraHeaders: { 'If-Match': eTag } });
+      }
+      this.emit(result, flags);
+    } catch (err) {
+      this.fail(err);
+    }
+  }
+
   protected fail(err: unknown): never {
     const normalized: NormalizedError = isNormalizedError(err)
       ? err

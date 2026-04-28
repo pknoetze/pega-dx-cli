@@ -394,3 +394,118 @@ describe('BaseCommand.runPost', () => {
     }
   });
 });
+
+class TestRunMutateWithEtag extends BaseCommand {
+  static override id = 'test-run-mutate';
+  async run(): Promise<void> {
+    const { flags } = await this.parse(TestRunMutateWithEtag);
+    await this.runMutateWithEtag(
+      flags as unknown as BaseFlags,
+      'PATCH',
+      '/cases/A',
+      '/cases/A/actions/Submit',
+      { content: { foo: 'bar' } },
+    );
+  }
+}
+
+class TestRunMutateWithEtagPut extends BaseCommand {
+  static override id = 'test-run-mutate-put';
+  async run(): Promise<void> {
+    const { flags } = await this.parse(TestRunMutateWithEtagPut);
+    await this.runMutateWithEtag(
+      flags as unknown as BaseFlags,
+      'PUT',
+      '/cases/A',
+      '/cases/A/stages/Stage2',
+      {},
+    );
+  }
+}
+
+describe('BaseCommand.runMutateWithEtag', () => {
+  beforeEach(() => {
+    process.env.PEGA_BASE_URL = 'https://pega.example.com';
+    process.env.PEGA_CLIENT_ID = 'cid';
+    process.env.PEGA_CLIENT_SECRET = 'sec';
+    process.env.PEGA_NO_CACHE = 'true';
+  });
+  afterEach(() => {
+    cleanupNock();
+    delete process.env.PEGA_BASE_URL;
+    delete process.env.PEGA_CLIENT_ID;
+    delete process.env.PEGA_CLIENT_SECRET;
+    delete process.env.PEGA_NO_CACHE;
+  });
+
+  test('PATCH: GETs parent, forwards eTag in If-Match', async () => {
+    mockOAuthSuccess('https://pega.example.com');
+    mockOAuthSuccess('https://pega.example.com');
+    nock('https://pega.example.com')
+      .get('/prweb/api/application/v2/cases/A')
+      .reply(200, { id: 'A' }, { ETag: '"abc123"' });
+    nock('https://pega.example.com', { reqheaders: { 'if-match': '"abc123"' } })
+      .patch('/prweb/api/application/v2/cases/A/actions/Submit', { content: { foo: 'bar' } })
+      .reply(200, { id: 'A', status: 'Updated' });
+
+    const captured = captureOutput();
+    try {
+      await TestRunMutateWithEtag.run([]);
+      expect(JSON.parse(captured.stdout.join(''))).toEqual({ id: 'A', status: 'Updated' });
+    } finally {
+      captured.restore();
+    }
+  });
+
+  test('PUT: same flow, method=PUT', async () => {
+    mockOAuthSuccess('https://pega.example.com');
+    mockOAuthSuccess('https://pega.example.com');
+    nock('https://pega.example.com')
+      .get('/prweb/api/application/v2/cases/A')
+      .reply(200, { id: 'A' }, { ETag: '"e2"' });
+    nock('https://pega.example.com', { reqheaders: { 'if-match': '"e2"' } })
+      .put('/prweb/api/application/v2/cases/A/stages/Stage2', {})
+      .reply(200, { id: 'A', stage: 'Stage2' });
+
+    const captured = captureOutput();
+    try {
+      await TestRunMutateWithEtagPut.run([]);
+      expect(JSON.parse(captured.stdout.join(''))).toEqual({ id: 'A', stage: 'Stage2' });
+    } finally {
+      captured.restore();
+    }
+  });
+
+  test('--dry-run shows method + If-Match placeholder', async () => {
+    const captured = captureOutput();
+    try {
+      await TestRunMutateWithEtag.run(['--dry-run']);
+      const out = JSON.parse(captured.stdout.join(''));
+      expect(out.method).toBe('PATCH');
+      expect(out.headers['If-Match']).toBe('<etag-from-GET>');
+      expect(out.headers['Content-Type']).toBe('application/json');
+      expect(out.body).toEqual({ content: { foo: 'bar' } });
+    } finally {
+      captured.restore();
+    }
+  });
+
+  test('GET returns no eTag → throws MISSING_ETAG', async () => {
+    mockOAuthSuccess('https://pega.example.com');
+    nock('https://pega.example.com')
+      .get('/prweb/api/application/v2/cases/A')
+      .reply(200, { id: 'A' }); // no ETag header
+
+    const captured = captureOutput();
+    let caughtError: { oclif?: { exit?: number } } | undefined;
+    try {
+      await TestRunMutateWithEtag.run([]);
+    } catch (e) {
+      caughtError = e as { oclif?: { exit?: number } };
+    } finally {
+      captured.restore();
+    }
+    expect(caughtError?.oclif?.exit).toBe(1);
+    expect(captured.stderr.join('')).toContain('MISSING_ETAG');
+  });
+});

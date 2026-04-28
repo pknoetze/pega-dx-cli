@@ -56,6 +56,21 @@ describe('createPegaApiClient', () => {
     expect(res).toEqual({ updated: true });
   });
 
+  test('put sends PUT with body and Content-Type', async () => {
+    nock('https://pega.example.com', {
+      reqheaders: { 'content-type': 'application/json' },
+    })
+      .put('/prweb/api/application/v2/cases/A/stages/Stage2', { foo: 'bar' })
+      .reply(200, { ok: true });
+
+    const c = createPegaApiClient({
+      baseUrl: 'https://pega.example.com',
+      tokenProvider: async () => 't',
+    });
+    const result = await c.put('/cases/A/stages/Stage2', { foo: 'bar' });
+    expect(result).toEqual({ ok: true });
+  });
+
   test('DELETE with empty response body resolves to empty object', async () => {
     nock(BASE)
       .delete('/prweb/api/application/v2/cases/C-1')

@@ -28,6 +28,7 @@ export interface ResponseWithMeta<T> {
 export interface PegaApiClient {
   get<T>(path: string, opts?: RequestOpts): Promise<T>;
   post<T>(path: string, body: unknown, opts?: RequestOpts): Promise<T>;
+  put<T>(path: string, body: unknown, opts?: RequestOpts): Promise<T>;
   patch<T>(path: string, body: unknown, opts?: RequestOpts): Promise<T>;
   delete<T>(path: string, opts?: RequestOpts): Promise<T>;
   getWithMeta<T>(path: string, opts?: RequestOpts): Promise<ResponseWithMeta<T>>;
@@ -133,6 +134,10 @@ export function createPegaApiClient(deps: PegaApiClientDeps): PegaApiClient {
     },
     async post<T>(path: string, body: unknown, opts?: RequestOpts): Promise<T> {
       const r = await doRequest<T>(deps, 'POST', path, body, opts);
+      return r.data;
+    },
+    async put<T>(path: string, body: unknown, opts?: RequestOpts): Promise<T> {
+      const r = await doRequest<T>(deps, 'PUT', path, body, opts);
       return r.data;
     },
     async patch<T>(path: string, body: unknown, opts?: RequestOpts): Promise<T> {
