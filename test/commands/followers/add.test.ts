@@ -75,14 +75,16 @@ describe('followers add', () => {
     expect(caughtError?.oclif?.exit).toBe(2);
   });
 
-  test('URL-encodes special characters in caseId', async () => {
+  test('URL-encodes special characters in caseId path segment', async () => {
     mockOAuthSuccess('https://pega.example.com');
+    // caseId 'MYAPP/CASE/1' must be encoded to 'MYAPP%2FCASE%2F1' in the URL.
+    // If encodeURIComponent is removed from add.ts, this nock interceptor stops matching.
     nock('https://pega.example.com')
-      .post('/prweb/api/application/v2/cases/MYAPP-CASE-1/followers', { user: 'a@b.com' })
+      .post('/prweb/api/application/v2/cases/MYAPP%2FCASE%2F1/followers', { user: 'U1' })
       .reply(201, { added: true });
 
     captured = captureOutput();
-    await FollowersAdd.run(['MYAPP-CASE-1', '--user', 'a@b.com']);
+    await FollowersAdd.run(['MYAPP/CASE/1', '--user', 'U1']);
     expect(JSON.parse(captured.stdout.join(''))).toEqual({ added: true });
   });
 });
