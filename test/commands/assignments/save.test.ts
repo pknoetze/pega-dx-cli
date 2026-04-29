@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import nock from 'nock';
 import { resetMockFs } from '../../helpers/mock-filesystem.js';
-import { captureOutput, parseFirstJson, type CapturedOutput } from '../../helpers/capture-output.js';
+import { captureOutput, type CapturedOutput } from '../../helpers/capture-output.js';
 import { mockOAuthSuccess, cleanupNock } from '../../helpers/mock-pega-api.js';
 
 jest.unstable_mockModule('node:fs', async () => {
