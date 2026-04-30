@@ -74,6 +74,8 @@ pega cases get MYAPP-CASE-1
 
 ## Command reference
 
+The CLI is organized into 9 command groups: `auth`, `cases`, `assignments`, `case-types`, `documents`, `tags`, `followers`, `related`, and `participants`.
+
 | Command | Description | Example |
 |---|---|---|
 | `pega auth login` | Acquire a fresh OAuth token, cache it | `pega auth login` |
@@ -82,9 +84,229 @@ pega cases get MYAPP-CASE-1
 | `pega cases get <caseId>` | Fetch a case by ID | `pega cases get MYAPP-CASE-1 --fields status` |
 | `pega cases create --type <id>` | Create a new case | `pega cases create --type Claim --data @claim.json` |
 | `pega cases delete <caseId>` | Delete a case (must be in create stage) | `pega cases delete MYAPP-CASE-1` |
+| `pega cases get-action <caseId>` | Get a case action's view | `pega cases get-action MYAPP-CASE-1 --action Approve` |
+| `pega cases perform-action <caseId>` | Perform a case action | `pega cases perform-action MYAPP-CASE-1 --action Approve --data '{"reason":"OK"}'` |
+| `pega cases stage-next <caseId>` | Advance to the next stage | `pega cases stage-next MYAPP-CASE-1` |
+| `pega cases stage-go <caseId>` | Move to a specific stage | `pega cases stage-go MYAPP-CASE-1 --stage Resolution` |
+| `pega cases get-view <caseId>` | Get a named view | `pega cases get-view MYAPP-CASE-1 --view Summary` |
+| `pega cases get-page <caseId>` | Get a named embedded page | `pega cases get-page MYAPP-CASE-1 --page Customer` |
+| `pega cases list-ancestors <caseId>` | Walk the case hierarchy upward | `pega cases list-ancestors MYAPP-CASE-1` |
+| `pega cases list-descendants <caseId>` | Walk the case hierarchy downward | `pega cases list-descendants MYAPP-CASE-1` |
 | `pega assignments get <id>` | Fetch an assignment | `pega assignments get ASSIGN-WORKLIST X-1!FLOW` |
 | `pega assignments get-next` | Get next assignment from worklist | `pega assignments get-next` |
 | `pega assignments perform <id> --action <id>` | Perform assignment action (auto-fetches eTag) | `pega assignments perform X-1 --action Submit --data @form.json` |
+| `pega assignments save <id>` | Save a draft of an in-progress assignment | `pega assignments save ASSIGN-1 --action Submit --data @draft.json` |
+| `pega assignments navigate-back <id>` | Navigate back to the previous step | `pega assignments navigate-back ASSIGN-1` |
+| `pega assignments get-action <id>` | Get the action's view (fields, allowed values) | `pega assignments get-action ASSIGN-1 --action Submit` |
+| `pega assignments refresh-action <id>` | Refresh a field after a value change | `pega assignments refresh-action ASSIGN-1 --action Submit --data '{"field":"new"}'` |
+| `pega assignments list` | List your worklist | `pega assignments list --max 50` |
+| `pega assignments query` | Query a workbasket | `pega assignments query --workbasket WB-1 --max 50` |
+| `pega case-types list` | List all case types | `pega case-types list` |
+| `pega case-types get <id>` | Get full details of a case type | `pega case-types get MYAPP-WORK-CASE` |
+| `pega case-types get-action <id>` | Get the creation action view | `pega case-types get-action MYAPP-WORK-CASE --action pyStartCase` |
+| `pega documents list <caseId>` | List documents on a case | `pega documents list MYAPP-CASE-1` |
+| `pega documents get <id>` | Get a document's metadata | `pega documents get DOC-1` |
+| `pega tags list <caseId>` | List tags on a case | `pega tags list MYAPP-CASE-1` |
+| `pega tags add <caseId>` | Add one or more tags | `pega tags add MYAPP-CASE-1 --tag urgent --tag review` |
+| `pega tags delete <caseId>` | Remove a tag | `pega tags delete MYAPP-CASE-1 --tag urgent` |
+| `pega followers list <caseId>` | List followers on a case | `pega followers list MYAPP-CASE-1` |
+| `pega followers add <caseId>` | Add a follower | `pega followers add MYAPP-CASE-1 --user U1` |
+| `pega followers delete <caseId>` | Remove a follower | `pega followers delete MYAPP-CASE-1 --user U1` |
+| `pega related list <caseId>` | List related cases | `pega related list MYAPP-CASE-1` |
+| `pega related add <caseId>` | Add a relationship | `pega related add MYAPP-CASE-1 --related-case-id MYAPP-CASE-2 --relationship parent` |
+| `pega related delete <caseId>` | Remove a relationship | `pega related delete MYAPP-CASE-1 --related-case-id MYAPP-CASE-2` |
+| `pega participants list <caseId>` | List all participants on a case | `pega participants list MYAPP-CASE-1` |
+| `pega participants get <caseId>` | Get one participant | `pega participants get MYAPP-CASE-1 --role Owner` |
+| `pega participants add <caseId>` | Add a participant | `pega participants add MYAPP-CASE-1 --role Owner --user U1` |
+| `pega participants update <caseId>` | Update a participant's details | `pega participants update MYAPP-CASE-1 --role Owner --data @owner.json` |
+| `pega participants replace <caseId>` | Replace all participants in a role | `pega participants replace MYAPP-CASE-1 --role Reviewer --data @reviewers.json` |
+| `pega participants delete <caseId>` | Remove a participant | `pega participants delete MYAPP-CASE-1 --role Owner --user U1` |
+| `pega participants delete-bulk <caseId>` | Remove all participants in a role | `pega participants delete-bulk MYAPP-CASE-1 --role Reviewer` |
+
+## Cases
+
+Fetch, create, delete, and navigate cases.
+
+```bash
+# Fetch a case
+pega cases get MYAPP-CASE-1
+
+# Create a case
+pega cases create --type Claim --data @claim.json
+
+# Delete a case (must be in create stage)
+pega cases delete MYAPP-CASE-1
+
+# Get a case action's view
+pega cases get-action MYAPP-CASE-1 --action Approve
+
+# Perform a case action
+pega cases perform-action MYAPP-CASE-1 --action Approve --data '{"reason":"OK"}'
+
+# Advance to the next stage
+pega cases stage-next MYAPP-CASE-1
+
+# Move to a specific stage
+pega cases stage-go MYAPP-CASE-1 --stage Resolution
+
+# Get a named view
+pega cases get-view MYAPP-CASE-1 --view Summary
+
+# Get a named embedded page
+pega cases get-page MYAPP-CASE-1 --page Customer
+
+# Walk the case hierarchy
+pega cases list-ancestors MYAPP-CASE-1
+pega cases list-descendants MYAPP-CASE-1
+```
+
+Run `pega cases --help` for the full list of commands and flags.
+
+## Assignments
+
+Fetch and submit assignments from your worklist or a workbasket.
+
+```bash
+# Fetch an assignment
+pega assignments get ASSIGN-WORKLIST X-1!FLOW
+
+# Get next assignment from worklist
+pega assignments get-next
+
+# Perform an assignment action (auto-fetches eTag)
+pega assignments perform ASSIGN-1 --action Submit --data @form.json
+
+# Save a draft of an in-progress assignment
+pega assignments save ASSIGN-1 --action Submit --data @draft.json
+
+# Navigate back to the previous step
+pega assignments navigate-back ASSIGN-1
+
+# Get the action's view (fields, allowed values)
+pega assignments get-action ASSIGN-1 --action Submit
+
+# Refresh a field after a value change
+pega assignments refresh-action ASSIGN-1 --action Submit --data '{"field":"new"}'
+
+# List your worklist
+pega assignments list --max 50
+
+# Query a workbasket
+pega assignments query --workbasket WB-1 --max 50
+```
+
+Run `pega assignments --help` for the full list of commands and flags.
+
+## Case Types
+
+Inspect case types in the application. Useful for discovering creation actions before calling `pega cases create`.
+
+```bash
+# List all case types
+pega case-types list
+
+# Get full details of a case type
+pega case-types get MYAPP-WORK-CASE
+
+# Get the creation action view (use this to learn what fields create requires)
+pega case-types get-action MYAPP-WORK-CASE --action pyStartCase
+```
+
+Run `pega case-types --help` for the full list.
+
+## Documents
+
+Inspect documents linked to cases. Phase 2b.1 covers metadata only; binary download lands in Phase 2b.2 with the `attachments` group.
+
+```bash
+# List documents on a case
+pega documents list MYAPP-CASE-1
+
+# Get a document's metadata
+pega documents get DOC-1
+```
+
+Run `pega documents --help` for the full list of commands and flags.
+
+## Tags
+
+Manage tags on a case.
+
+```bash
+# List tags
+pega tags list MYAPP-CASE-1
+
+# Add one or more tags (repeat --tag for multiple)
+pega tags add MYAPP-CASE-1 --tag urgent --tag review
+
+# Remove a tag
+pega tags delete MYAPP-CASE-1 --tag urgent
+```
+
+Run `pega tags --help` for the full list.
+
+## Followers
+
+Manage case followers.
+
+```bash
+# List followers
+pega followers list MYAPP-CASE-1
+
+# Add a follower
+pega followers add MYAPP-CASE-1 --user U1
+
+# Remove a follower
+pega followers delete MYAPP-CASE-1 --user U1
+```
+
+Run `pega followers --help` for the full list.
+
+## Related
+
+Manage relationships between cases.
+
+```bash
+# List related cases
+pega related list MYAPP-CASE-1
+
+# Add a relationship
+pega related add MYAPP-CASE-1 --related-case-id MYAPP-CASE-2 --relationship parent
+
+# Remove a relationship
+pega related delete MYAPP-CASE-1 --related-case-id MYAPP-CASE-2
+```
+
+Run `pega related --help` for the full list.
+
+## Participants
+
+Manage case participants by role.
+
+```bash
+# List all participants on a case
+pega participants list MYAPP-CASE-1
+
+# Get one participant
+pega participants get MYAPP-CASE-1 --role Owner
+
+# Add a participant
+pega participants add MYAPP-CASE-1 --role Owner --user U1
+
+# Update a participant's details
+pega participants update MYAPP-CASE-1 --role Owner --data @owner.json
+
+# Replace all participants in a role
+pega participants replace MYAPP-CASE-1 --role Reviewer --data @reviewers.json
+
+# Remove a participant
+pega participants delete MYAPP-CASE-1 --role Owner --user U1
+
+# Remove all participants in a role
+pega participants delete-bulk MYAPP-CASE-1 --role Reviewer
+```
+
+Run `pega participants --help` for the full list.
 
 ## Global flags
 
