@@ -16,6 +16,7 @@ export default class ParticipantsDeleteBulk extends BaseCommand {
   async run(): Promise<void> {
     const { args, flags } = await this.parse(ParticipantsDeleteBulk);
     // TODO: verify path against real Pega in Task 13 — MCP does not implement delete_case_participants
+    // TODO: verify whether ?role= accepts a role name or a participantID in Task 13 (same ambiguity as participants get/delete)
     const encCaseId = encodeURIComponent(args.caseId);
     const params = new URLSearchParams({ role: flags.role });
     const path = `/cases/${encCaseId}/participants?${params.toString()}`;
