@@ -152,7 +152,7 @@ pega cases stage-go MYAPP-CASE-1 --stage Resolution
 # Get a named view
 pega cases get-view MYAPP-CASE-1 --view Summary
 
-# Get a named embedded page
+# Get a named embedded page (DEFERRED to Phase 2b.2 — exits NOT_IMPLEMENTED)
 pega cases get-page MYAPP-CASE-1 --page Customer
 
 # Walk the case hierarchy
@@ -188,12 +188,14 @@ pega assignments get-action ASSIGN-1 --action Submit
 # Refresh a field after a value change
 pega assignments refresh-action ASSIGN-1 --action Submit --data '{"field":"new"}'
 
-# List your worklist
+# List your worklist (DEFERRED to Phase 2b.2 — exits NOT_IMPLEMENTED)
 pega assignments list --max 50
 
-# Query a workbasket
+# Query a workbasket (DEFERRED to Phase 2b.2 — exits NOT_IMPLEMENTED)
 pega assignments query --workbasket WB-1 --max 50
 ```
+
+`assignments list` and `assignments query` are deferred to Phase 2b.2: in Pega DX V2 the worklist and workbaskets are surfaced via data views (e.g. `D_pyMyWorkList`), not via dedicated REST collections. Once `pega data get-view` lands in 2b.2 those data views become accessible.
 
 Run `pega assignments --help` for the full list of commands and flags.
 
@@ -205,26 +207,30 @@ Inspect case types in the application. Useful for discovering creation actions b
 # List all case types
 pega case-types list
 
-# Get full details of a case type
-pega case-types get MYAPP-WORK-CASE
+# Get full details of a case type (client-side filter on the list response)
+pega case-types get Uplus-FS-Work-ProductComplaint
 
 # Get the creation action view (use this to learn what fields create requires)
-pega case-types get-action MYAPP-WORK-CASE --action pyStartCase
+pega case-types get-action Uplus-FS-Work-ProductComplaint --action Create
 ```
+
+`case-types get` filters the `case-types list` response client-side because Pega DX V2 has no `GET /casetypes/{id}` endpoint.
 
 Run `pega case-types --help` for the full list.
 
 ## Documents
 
-Inspect documents linked to cases. Phase 2b.1 covers metadata only; binary download lands in Phase 2b.2 with the `attachments` group.
+Inspect documents linked to cases.
 
 ```bash
-# List documents on a case
-pega documents list MYAPP-CASE-1
-
-# Get a document's metadata
+# Get a document's metadata (works in 2b.1)
 pega documents get DOC-1
+
+# List documents on a case (DEFERRED to Phase 2b.2 — exits NOT_IMPLEMENTED)
+pega documents list MYAPP-CASE-1
 ```
+
+`documents list` is deferred to Phase 2b.2 because in Pega DX V2 documents are surfaced as case attachments rather than via a dedicated `/cases/{id}/documents` endpoint. The forthcoming `attachments` group will cover this.
 
 Run `pega documents --help` for the full list of commands and flags.
 
@@ -299,8 +305,8 @@ pega participants update MYAPP-CASE-1 --role Owner --data @owner.json
 # Replace all participants in a role
 pega participants replace MYAPP-CASE-1 --role Reviewer --data @reviewers.json
 
-# Remove a participant
-pega participants delete MYAPP-CASE-1 --role Owner --user U1
+# Remove a participant (--role acts as the participant identifier)
+pega participants delete MYAPP-CASE-1 --role Owner
 
 # Remove all participants in a role
 pega participants delete-bulk MYAPP-CASE-1 --role Reviewer
