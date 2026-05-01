@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globa
 import nock from 'nock';
 import { resetMockFs } from '../../helpers/mock-filesystem.js';
 import { captureOutput, type CapturedOutput } from '../../helpers/capture-output.js';
-import { mockOAuthSuccess, cleanupNock } from '../../helpers/mock-pega-api.js';
+import { cleanupNock } from '../../helpers/mock-pega-api.js';
 
 jest.unstable_mockModule('node:fs', async () => {
   const memfs = await import('memfs');
@@ -39,20 +39,20 @@ afterEach(() => {
   delete process.env.PEGA_CLIENT_ID;
   delete process.env.PEGA_CLIENT_SECRET;
   delete process.env.PEGA_NO_CACHE;
+  delete process.env.HOME;
 });
 
 describe('documents list', () => {
-  test('GETs /cases/{id}/documents and emits the response', async () => {
-    mockOAuthSuccess('https://pega.example.com');
-    nock('https://pega.example.com')
-      .get('/prweb/api/application/v2/cases/MYAPP-CASE-1/documents')
-      .reply(200, [{ id: 'DOC-1' }, { id: 'DOC-2' }]);
-
+  test('exits 1 with NOT_IMPLEMENTED (deferred to Phase 2b.2)', async () => {
     captured = captureOutput();
-    await DocumentsList.run(['MYAPP-CASE-1']);
-    expect(JSON.parse(captured.stdout.join(''))).toEqual([
-      { id: 'DOC-1' },
-      { id: 'DOC-2' },
-    ]);
+    let caughtError: { oclif?: { exit?: number } } | undefined;
+    try {
+      await DocumentsList.run(['MYAPP-CASE-1']);
+    } catch (e) {
+      caughtError = e as { oclif?: { exit?: number } };
+    }
+    expect(caughtError?.oclif?.exit).toBe(1);
+    expect(captured.stderr.join('')).toContain('NOT_IMPLEMENTED');
+    expect(captured.stderr.join('')).toContain('attachments');
   });
 });

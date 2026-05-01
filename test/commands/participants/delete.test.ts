@@ -43,14 +43,14 @@ afterEach(() => {
 });
 
 describe('participants delete', () => {
-  test('DELETEs /cases/{id}/participants/{role}/{user}', async () => {
+  test('DELETEs /cases/{id}/participants/{role} (single segment, role is the participant ID)', async () => {
     mockOAuthSuccess('https://pega.example.com');
     nock('https://pega.example.com')
-      .delete('/prweb/api/application/v2/cases/MYAPP-CASE-1/participants/Owner/U1')
+      .delete('/prweb/api/application/v2/cases/MYAPP-CASE-1/participants/Customer')
       .reply(200, { deleted: true });
 
     captured = captureOutput();
-    await ParticipantsDelete.run(['MYAPP-CASE-1', '--role', 'Owner', '--user', 'U1']);
+    await ParticipantsDelete.run(['MYAPP-CASE-1', '--role', 'Customer']);
     expect(JSON.parse(captured.stdout.join(''))).toEqual({ deleted: true });
   });
 });

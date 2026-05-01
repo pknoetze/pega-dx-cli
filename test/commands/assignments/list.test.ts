@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globa
 import nock from 'nock';
 import { resetMockFs } from '../../helpers/mock-filesystem.js';
 import { captureOutput, type CapturedOutput } from '../../helpers/capture-output.js';
-import { mockOAuthSuccess, cleanupNock } from '../../helpers/mock-pega-api.js';
+import { cleanupNock } from '../../helpers/mock-pega-api.js';
 
 jest.unstable_mockModule('node:fs', async () => {
   const memfs = await import('memfs');
@@ -43,27 +43,16 @@ afterEach(() => {
 });
 
 describe('assignments list', () => {
-  test('without --max GETs /assignments?type=worklist', async () => {
-    mockOAuthSuccess('https://pega.example.com');
-    nock('https://pega.example.com')
-      .get('/prweb/api/application/v2/assignments')
-      .query({ type: 'worklist' })
-      .reply(200, { assignments: [] });
-
+  test('exits 1 with NOT_IMPLEMENTED (deferred to Phase 2b.2 data views)', async () => {
     captured = captureOutput();
-    await AssignmentsList.run([]);
-    expect(JSON.parse(captured.stdout.join(''))).toEqual({ assignments: [] });
-  });
-
-  test('with --max 50 GETs /assignments?type=worklist&pageSize=50', async () => {
-    mockOAuthSuccess('https://pega.example.com');
-    nock('https://pega.example.com')
-      .get('/prweb/api/application/v2/assignments')
-      .query({ type: 'worklist', pageSize: '50' })
-      .reply(200, { assignments: [{ id: 'A-1' }] });
-
-    captured = captureOutput();
-    await AssignmentsList.run(['--max', '50']);
-    expect(JSON.parse(captured.stdout.join(''))).toEqual({ assignments: [{ id: 'A-1' }] });
+    let caughtError: { oclif?: { exit?: number } } | undefined;
+    try {
+      await AssignmentsList.run([]);
+    } catch (e) {
+      caughtError = e as { oclif?: { exit?: number } };
+    }
+    expect(caughtError?.oclif?.exit).toBe(1);
+    expect(captured.stderr.join('')).toContain('NOT_IMPLEMENTED');
+    expect(captured.stderr.join('')).toContain('data view');
   });
 });

@@ -43,14 +43,40 @@ afterEach(() => {
 });
 
 describe('case-types get', () => {
-  test('GETs /casetypes/{id}', async () => {
+  test('GETs /casetypes and filters by ID', async () => {
     mockOAuthSuccess('https://pega.example.com');
     nock('https://pega.example.com')
-      .get('/prweb/api/application/v2/casetypes/MYAPP-WORK-CASE')
-      .reply(200, { id: 'MYAPP-WORK-CASE', stages: [] });
+      .get('/prweb/api/application/v2/casetypes')
+      .reply(200, {
+        caseTypes: [
+          { ID: 'OTHER-CASE', name: 'Other' },
+          { ID: 'TARGET-CASE', name: 'Target', stages: [] },
+        ],
+      });
 
     captured = captureOutput();
-    await CaseTypesGet.run(['MYAPP-WORK-CASE']);
-    expect(JSON.parse(captured.stdout.join(''))).toEqual({ id: 'MYAPP-WORK-CASE', stages: [] });
+    await CaseTypesGet.run(['TARGET-CASE']);
+    expect(JSON.parse(captured.stdout.join(''))).toEqual({
+      ID: 'TARGET-CASE',
+      name: 'Target',
+      stages: [],
+    });
+  });
+
+  test('not found in list → exits 1 with NOT_FOUND', async () => {
+    mockOAuthSuccess('https://pega.example.com');
+    nock('https://pega.example.com')
+      .get('/prweb/api/application/v2/casetypes')
+      .reply(200, { caseTypes: [{ ID: 'OTHER-CASE' }] });
+
+    captured = captureOutput();
+    let caughtError: { oclif?: { exit?: number } } | undefined;
+    try {
+      await CaseTypesGet.run(['MISSING']);
+    } catch (e) {
+      caughtError = e as { oclif?: { exit?: number } };
+    }
+    expect(caughtError?.oclif?.exit).toBe(1);
+    expect(captured.stderr.join('')).toContain('NOT_FOUND');
   });
 });

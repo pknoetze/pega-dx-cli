@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globa
 import nock from 'nock';
 import { resetMockFs } from '../../helpers/mock-filesystem.js';
 import { captureOutput, type CapturedOutput } from '../../helpers/capture-output.js';
-import { mockOAuthSuccess, cleanupNock } from '../../helpers/mock-pega-api.js';
+import { cleanupNock } from '../../helpers/mock-pega-api.js';
 
 jest.unstable_mockModule('node:fs', async () => {
   const memfs = await import('memfs');
@@ -43,26 +43,16 @@ afterEach(() => {
 });
 
 describe('assignments query', () => {
-  test('without --max GETs /workbaskets/{wb}/assignments', async () => {
-    mockOAuthSuccess('https://pega.example.com');
-    nock('https://pega.example.com')
-      .get('/prweb/api/application/v2/workbaskets/WB-1/assignments')
-      .reply(200, { assignments: [] });
-
+  test('exits 1 with NOT_IMPLEMENTED (deferred to Phase 2b.2 data views)', async () => {
     captured = captureOutput();
-    await AssignmentsQuery.run(['--workbasket', 'WB-1']);
-    expect(JSON.parse(captured.stdout.join(''))).toEqual({ assignments: [] });
-  });
-
-  test('with --max 50 GETs /workbaskets/{wb}/assignments?pageSize=50', async () => {
-    mockOAuthSuccess('https://pega.example.com');
-    nock('https://pega.example.com')
-      .get('/prweb/api/application/v2/workbaskets/WB-1/assignments')
-      .query({ pageSize: '50' })
-      .reply(200, { assignments: [{ id: 'A-2' }] });
-
-    captured = captureOutput();
-    await AssignmentsQuery.run(['--workbasket', 'WB-1', '--max', '50']);
-    expect(JSON.parse(captured.stdout.join(''))).toEqual({ assignments: [{ id: 'A-2' }] });
+    let caughtError: { oclif?: { exit?: number } } | undefined;
+    try {
+      await AssignmentsQuery.run(['--workbasket', 'WB-1']);
+    } catch (e) {
+      caughtError = e as { oclif?: { exit?: number } };
+    }
+    expect(caughtError?.oclif?.exit).toBe(1);
+    expect(captured.stderr.join('')).toContain('NOT_IMPLEMENTED');
+    expect(captured.stderr.join('')).toContain('data view');
   });
 });

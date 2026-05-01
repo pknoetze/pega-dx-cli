@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globa
 import nock from 'nock';
 import { resetMockFs } from '../../helpers/mock-filesystem.js';
 import { captureOutput, type CapturedOutput } from '../../helpers/capture-output.js';
-import { mockOAuthSuccess, cleanupNock } from '../../helpers/mock-pega-api.js';
+import { cleanupNock } from '../../helpers/mock-pega-api.js';
 
 jest.unstable_mockModule('node:fs', async () => {
   const memfs = await import('memfs');
@@ -43,14 +43,16 @@ afterEach(() => {
 });
 
 describe('cases get-page', () => {
-  test('GETs /cases/{caseId}/pages/{page}', async () => {
-    mockOAuthSuccess('https://pega.example.com');
-    nock('https://pega.example.com')
-      .get('/prweb/api/application/v2/cases/MYAPP-CASE-1/pages/Customer')
-      .reply(200, { name: 'Customer', data: {} });
-
+  test('exits 1 with NOT_IMPLEMENTED (deferred to Phase 2b.2; embedded pages are part of `cases get`)', async () => {
     captured = captureOutput();
-    await CasesGetPage.run(['MYAPP-CASE-1', '--page', 'Customer']);
-    expect(JSON.parse(captured.stdout.join(''))).toEqual({ name: 'Customer', data: {} });
+    let caughtError: { oclif?: { exit?: number } } | undefined;
+    try {
+      await CasesGetPage.run(['MYAPP-CASE-1', '--page', 'Customer']);
+    } catch (e) {
+      caughtError = e as { oclif?: { exit?: number } };
+    }
+    expect(caughtError?.oclif?.exit).toBe(1);
+    expect(captured.stderr.join('')).toContain('NOT_IMPLEMENTED');
+    expect(captured.stderr.join('')).toContain('cases get');
   });
 });
