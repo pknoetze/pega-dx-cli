@@ -13,7 +13,7 @@ async function readStdin(): Promise<string> {
   return Buffer.concat(chunks).toString('utf-8');
 }
 
-export async function parseDataInput(value: string): Promise<unknown> {
+export async function parseDataInput(value: string, flagName = '--data'): Promise<unknown> {
   let raw: string;
   if (value === '-') {
     raw = await readStdin();
@@ -29,6 +29,49 @@ export async function parseDataInput(value: string): Promise<unknown> {
   try {
     return JSON.parse(raw);
   } catch (err) {
-    throw invalidArgs(`Invalid JSON in --data: ${(err as Error).message}`);
+    throw invalidArgs(`Invalid JSON in ${flagName}: ${(err as Error).message}`);
   }
+}
+
+export interface MutationBodyFlags {
+  data?: string;
+  'page-instructions'?: string;
+  attachments?: string;
+  'interest-page'?: string;
+  'interest-page-action-id'?: string;
+}
+
+export type MutationBodyShape = 'action' | 'refresh' | 'navigate';
+
+export async function composeMutationBody(
+  flags: MutationBodyFlags,
+  shape: MutationBodyShape,
+): Promise<Record<string, unknown>> {
+  if (shape === 'refresh' && flags.attachments !== undefined) {
+    throw invalidArgs(
+      'refresh body does not accept --attachments (only content, pageInstructions, interestPage, interestPageActionID)',
+    );
+  }
+
+  const body: Record<string, unknown> = {};
+
+  if (flags.data !== undefined) {
+    body.content = await parseDataInput(flags.data, '--data');
+  }
+  if (flags['page-instructions'] !== undefined) {
+    body.pageInstructions = await parseDataInput(flags['page-instructions'], '--page-instructions');
+  }
+  if (shape !== 'refresh' && flags.attachments !== undefined) {
+    body.attachments = await parseDataInput(flags.attachments, '--attachments');
+  }
+  // interestPage/interestPageActionID are only meaningful for 'refresh' bodies.
+  // Other shapes simply do not surface these flags in their commands.
+  if (shape === 'refresh' && flags['interest-page'] !== undefined) {
+    body.interestPage = flags['interest-page'];
+  }
+  if (shape === 'refresh' && flags['interest-page-action-id'] !== undefined) {
+    body.interestPageActionID = flags['interest-page-action-id'];
+  }
+
+  return body;
 }
