@@ -21,7 +21,7 @@ export default class CasesCalcFields extends BaseCommand {
 
   async run(): Promise<void> {
     const { args, flags } = await this.parse(CasesCalcFields);
-    let body: unknown;
+    let body: unknown = undefined;
     try {
       body = await parseDataInput(flags.data);
     } catch (err) {
