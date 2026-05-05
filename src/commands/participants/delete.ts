@@ -2,24 +2,27 @@ import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
 export default class ParticipantsDelete extends BaseCommand {
-  static override description = 'Remove a participant from a case (identified by role)';
+  static override description = 'Remove a participant from a case';
   static override examples = [
-    '<%= config.bin %> participants delete MYAPP-CASE-1 --role Customer',
+    '<%= config.bin %> participants delete MYAPP-CASE-1 --participant-id PEGA-PART-X',
   ];
   static override args = {
     caseId: Args.string({ required: true, description: 'Case ID' }),
   };
   static override flags = {
-    role: Flags.string({ required: true, description: 'Participant role (also acts as the participant identifier)' }),
+    'participant-id': Flags.string({
+      required: true,
+      description: 'Participant instance ID',
+    }),
   };
 
   async run(): Promise<void> {
     const { args, flags } = await this.parse(ParticipantsDelete);
     const encCaseId = encodeURIComponent(args.caseId);
-    const encRole = encodeURIComponent(flags.role);
+    const encPartId = encodeURIComponent(flags['participant-id']);
     await this.runDelete(
       flags as unknown as BaseFlags,
-      `/cases/${encCaseId}/participants/${encRole}`,
+      `/cases/${encCaseId}/participants/${encPartId}`,
     );
   }
 }

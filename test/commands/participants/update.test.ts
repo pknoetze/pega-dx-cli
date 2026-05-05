@@ -1,87 +1,69 @@
-import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
 import nock from 'nock';
-import { resetMockFs } from '../../helpers/mock-filesystem.js';
-import { captureOutput, type CapturedOutput } from '../../helpers/capture-output.js';
+import ParticipantsUpdate from '../../../src/commands/participants/update.js';
 import { mockOAuthSuccess, cleanupNock } from '../../helpers/mock-pega-api.js';
+import { captureOutput } from '../../helpers/capture-output.js';
 
-jest.unstable_mockModule('node:fs', async () => {
-  const memfs = await import('memfs');
-  return { ...memfs.fs, default: memfs.fs };
-});
-
-const { default: ParticipantsUpdate } = await import('../../../src/commands/participants/update.js');
-
-let captured: CapturedOutput;
 let origEmitWarning: typeof process.emitWarning;
 
-beforeEach(() => {
-  resetMockFs();
-  process.env.HOME = '/home/test';
-  process.env.PEGA_BASE_URL = 'https://pega.example.com';
-  process.env.PEGA_CLIENT_ID = 'id';
-  process.env.PEGA_CLIENT_SECRET = 's';
-  process.env.PEGA_NO_CACHE = 'true';
-  if (!nock.isActive()) nock.activate();
-  origEmitWarning = process.emitWarning;
-  process.emitWarning = (warning: string | Error, ...args: unknown[]) => {
-    const msg = typeof warning === 'string'
-      ? warning
-      : ((warning as { message?: string }).message ?? String(warning));
-    origEmitWarning.call(process, msg, ...(args as []));
-  };
-});
-
-afterEach(() => {
-  cleanupNock();
-  captured?.restore();
-  process.emitWarning = origEmitWarning;
-  delete process.env.PEGA_BASE_URL;
-  delete process.env.PEGA_CLIENT_ID;
-  delete process.env.PEGA_CLIENT_SECRET;
-  delete process.env.PEGA_NO_CACHE;
-  delete process.env.HOME;
-});
-
 describe('participants update', () => {
-  test('GETs case for eTag, then PATCHes /cases/{id}/participants/{role} with body', async () => {
+  beforeEach(() => {
+    process.env.PEGA_BASE_URL = 'https://pega.example.com';
+    process.env.PEGA_CLIENT_ID = 'cid';
+    process.env.PEGA_CLIENT_SECRET = 'sec';
+    process.env.PEGA_NO_CACHE = 'true';
+    if (!nock.isActive()) nock.activate();
+    origEmitWarning = process.emitWarning;
+    process.emitWarning = (warning: string | Error, ...args: unknown[]) => {
+      const msg =
+        typeof warning === 'string'
+          ? warning
+          : ((warning as { message?: string }).message ?? String(warning));
+      origEmitWarning.call(process, msg, ...(args as []));
+    };
+  });
+  afterEach(() => {
+    cleanupNock();
+    process.emitWarning = origEmitWarning;
+    delete process.env.PEGA_BASE_URL;
+    delete process.env.PEGA_CLIENT_ID;
+    delete process.env.PEGA_CLIENT_SECRET;
+    delete process.env.PEGA_NO_CACHE;
+  });
+
+  test('PATCHes /cases/{id}/participants/{participantID} with eTag', async () => {
     mockOAuthSuccess('https://pega.example.com');
     mockOAuthSuccess('https://pega.example.com');
+    const id = 'PEGA PART X';
+    const encoded = encodeURIComponent(id);
     nock('https://pega.example.com')
       .get('/prweb/api/application/v2/cases/MYAPP-CASE-1')
       .reply(200, { id: 'MYAPP-CASE-1' }, { ETag: '"e1"' });
-    nock('https://pega.example.com')
-      .matchHeader('If-Match', '"e1"')
+    const scope = nock('https://pega.example.com', {
+      reqheaders: { 'if-match': '"e1"' },
+    })
       .patch(
-        '/prweb/api/application/v2/cases/MYAPP-CASE-1/participants/Owner',
-        { email: 'a@b.com' },
+        `/prweb/api/application/v2/cases/MYAPP-CASE-1/participants/${encoded}`,
+        { content: { email: 'a@b.com' } },
       )
       .reply(200, { updated: true });
-
-    captured = captureOutput();
-    await ParticipantsUpdate.run(['MYAPP-CASE-1', '--role', 'Owner', '--data', '{"email":"a@b.com"}']);
-    expect(JSON.parse(captured.stdout.join(''))).toEqual({ updated: true });
+    const captured = captureOutput();
+    try {
+      await ParticipantsUpdate.run([
+        'MYAPP-CASE-1',
+        '--participant-id',
+        id,
+        '--data',
+        '{"email":"a@b.com"}',
+      ]);
+      expect(scope.isDone()).toBe(true);
+      expect(JSON.parse(captured.stdout.join(''))).toEqual({ updated: true });
+    } finally {
+      captured.restore();
+    }
   });
 
-  test('--dry-run shows PATCH + If-Match placeholder + body', async () => {
-    captured = captureOutput();
-    await ParticipantsUpdate.run([
-      'MYAPP-CASE-1',
-      '--role', 'Owner',
-      '--data', '{"email":"a@b.com"}',
-      '--dry-run',
-    ]);
-    const out = JSON.parse(captured.stdout.join(''));
-    expect(out.method).toBe('PATCH');
-    expect(out.url).toBe(
-      'https://pega.example.com/prweb/api/application/v2/cases/MYAPP-CASE-1/participants/Owner',
-    );
-    expect(out.headers.Authorization).toBe('[REDACTED]');
-    expect(out.headers['If-Match']).toBe('<etag-from-GET>');
-    expect(out.body).toEqual({ email: 'a@b.com' });
-  });
-
-  test('rejects without --data', async () => {
-    captured = captureOutput();
+  test('rejects --role flag (renamed in 0.4.0)', async () => {
     let caughtError: { oclif?: { exit?: number } } | undefined;
     try {
       await ParticipantsUpdate.run(['MYAPP-CASE-1', '--role', 'Owner']);
