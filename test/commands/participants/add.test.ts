@@ -24,9 +24,10 @@ beforeEach(() => {
   if (!nock.isActive()) nock.activate();
   origEmitWarning = process.emitWarning;
   process.emitWarning = (warning: string | Error, ...args: unknown[]) => {
-    const msg = typeof warning === 'string'
-      ? warning
-      : ((warning as { message?: string }).message ?? String(warning));
+    const msg =
+      typeof warning === 'string'
+        ? warning
+        : ((warning as { message?: string }).message ?? String(warning));
     origEmitWarning.call(process, msg, ...(args as []));
   };
 });
@@ -43,17 +44,29 @@ afterEach(() => {
 });
 
 describe('participants add', () => {
-  test('POSTs body { role, user } to /cases/{id}/participants', async () => {
+  test('POSTs {participantRoleID, content} to /cases/{id}/participants with eTag', async () => {
     mockOAuthSuccess('https://pega.example.com');
+    mockOAuthSuccess('https://pega.example.com');
+    const contentData = { pyFirstName: 'Jane', pyLastName: 'Doe', pyEmail1: 'jane@example.com', pyPhoneNumber: '' };
     nock('https://pega.example.com')
+      .get('/prweb/api/application/v2/cases/MYAPP-CASE-1')
+      .reply(200, {}, { ETag: '"etag1"' });
+    const scope = nock('https://pega.example.com')
       .post('/prweb/api/application/v2/cases/MYAPP-CASE-1/participants', {
-        role: 'Owner',
-        user: 'U1',
+        participantRoleID: 'Customer',
+        content: contentData,
       })
-      .reply(201, { role: 'Owner', user: 'U1' });
+      .matchHeader('If-Match', '"etag1"')
+      .reply(201, { participantRoleID: 'Customer' });
 
     captured = captureOutput();
-    await ParticipantsAdd.run(['MYAPP-CASE-1', '--role', 'Owner', '--user', 'U1']);
-    expect(JSON.parse(captured.stdout.join(''))).toEqual({ role: 'Owner', user: 'U1' });
+    await ParticipantsAdd.run([
+      'MYAPP-CASE-1',
+      '--role',
+      'Customer',
+      '--data',
+      JSON.stringify(contentData),
+    ]);
+    expect(scope.isDone()).toBe(true);
   });
 });

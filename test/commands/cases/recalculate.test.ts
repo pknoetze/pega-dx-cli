@@ -31,24 +31,31 @@ describe('cases recalculate', () => {
     delete process.env.PEGA_NO_CACHE;
   });
 
-  test('PATCHes /cases/{id}/actions/{action}/recalculate (encoding included)', async () => {
+  test('PATCHes /cases/{id}/actions/{action}/recalculate with calculations body (encoding included)', async () => {
     mockOAuthSuccess('https://pega.example.com');
     mockOAuthSuccess('https://pega.example.com');
     const id = 'CASE WITH SPACE';
     const encoded = encodeURIComponent(id);
+    const calcData = { calculations: { fields: [{ name: '.Total', context: 'content' }] } };
     nock('https://pega.example.com')
       .get(`/prweb/api/application/v2/cases/${encoded}`)
       .reply(200, { id }, { ETag: '"e1"' });
     const scope = nock('https://pega.example.com')
       .patch(
         `/prweb/api/application/v2/cases/${encoded}/actions/Approve/recalculate`,
-        { content: { x: 1 } },
+        calcData,
       )
       .matchHeader('If-Match', '"e1"')
       .reply(200, { recalculated: true });
     const captured = captureOutput();
     try {
-      await CasesRecalculate.run([id, '--action', 'Approve', '--data', '{"x":1}']);
+      await CasesRecalculate.run([
+        id,
+        '--action',
+        'Approve',
+        '--data',
+        JSON.stringify(calcData),
+      ]);
       expect(scope.isDone()).toBe(true);
     } finally {
       captured.restore();
