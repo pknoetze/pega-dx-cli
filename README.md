@@ -89,9 +89,18 @@ The CLI is organized into 9 command groups: `auth`, `cases`, `assignments`, `cas
 | `pega cases stage-next <caseId>` | Advance to the next stage | `pega cases stage-next MYAPP-CASE-1` |
 | `pega cases stage-go <caseId>` | Move to a specific stage | `pega cases stage-go MYAPP-CASE-1 --stage Resolution` |
 | `pega cases get-view <caseId>` | Get a named view | `pega cases get-view MYAPP-CASE-1 --view Summary` |
-| `pega cases get-page <caseId>` | Get a named embedded page | `pega cases get-page MYAPP-CASE-1 --page Customer` |
 | `pega cases list-ancestors <caseId>` | Walk the case hierarchy upward | `pega cases list-ancestors MYAPP-CASE-1` |
 | `pega cases list-descendants <caseId>` | Walk the case hierarchy downward | `pega cases list-descendants MYAPP-CASE-1` |
+| `pega cases bulk-actions` | List available bulk actions for cases | `pega cases bulk-actions --cases CASE-1,CASE-2` |
+| `pega cases bulk-perform` | Perform an action across multiple cases | `pega cases bulk-perform --action Approve --cases CASE-1,CASE-2` |
+| `pega cases start-process <caseId>` | Start an optional or stage process | `pega cases start-process MYAPP-CASE-1 --process pyAddNote` |
+| `pega cases list-stages <caseId>` | List case stages | `pega cases list-stages MYAPP-CASE-1` |
+| `pega cases refresh-action <caseId>` | Refresh a case action's view | `pega cases refresh-action MYAPP-CASE-1 --action Approve` |
+| `pega cases recalculate <caseId>` | Recalculate calculated fields | `pega cases recalculate MYAPP-CASE-1 --action Approve` |
+| `pega cases refresh-view <caseId>` | Refresh a named view | `pega cases refresh-view MYAPP-CASE-1 --view Summary` |
+| `pega cases calc-fields <caseId>` | Compute calculated fields for a view | `pega cases calc-fields MYAPP-CASE-1 --view Summary --data @fields.json` |
+| `pega cases discard-updates <caseId>` | Release the case lock | `pega cases discard-updates MYAPP-CASE-1` |
+| `pega cases list-attachment-categories <caseId>` | List configured attachment categories | `pega cases list-attachment-categories MYAPP-CASE-1` |
 | `pega assignments get <id>` | Fetch an assignment | `pega assignments get ASSIGN-WORKLIST X-1!FLOW` |
 | `pega assignments get-next` | Get next assignment from worklist | `pega assignments get-next` |
 | `pega assignments perform <id> --action <id>` | Perform assignment action (auto-fetches eTag) | `pega assignments perform X-1 --action Submit --data @form.json` |
@@ -99,13 +108,14 @@ The CLI is organized into 9 command groups: `auth`, `cases`, `assignments`, `cas
 | `pega assignments navigate-back <id>` | Navigate back to the previous step | `pega assignments navigate-back ASSIGN-1` |
 | `pega assignments get-action <id>` | Get the action's view (fields, allowed values) | `pega assignments get-action ASSIGN-1 --action Submit` |
 | `pega assignments refresh-action <id>` | Refresh a field after a value change | `pega assignments refresh-action ASSIGN-1 --action Submit --data '{"field":"new"}'` |
-| `pega assignments list` | List your worklist | `pega assignments list --max 50` |
-| `pega assignments query` | Query a workbasket | `pega assignments query --workbasket WB-1 --max 50` |
+| `pega assignments recalculate <id>` | Recalculate calculated fields for an action | `pega assignments recalculate ASSIGN-1 --action Submit` |
+| `pega assignments navigate-to-step <id>` | Jump to a specific step | `pega assignments navigate-to-step ASSIGN-1 --step Step3` |
 | `pega case-types list` | List all case types | `pega case-types list` |
 | `pega case-types get <id>` | Get full details of a case type | `pega case-types get MYAPP-WORK-CASE` |
 | `pega case-types get-action <id>` | Get the creation action view | `pega case-types get-action MYAPP-WORK-CASE --action pyStartCase` |
-| `pega documents list <caseId>` | List documents on a case | `pega documents list MYAPP-CASE-1` |
+| `pega case-types list-bulk-actions <id>` | List bulk actions for a case type (Launchpad only) | `pega case-types list-bulk-actions Uplus-FS-Work-Loan` |
 | `pega documents get <id>` | Get a document's metadata | `pega documents get DOC-1` |
+| `pega documents delete <caseId>` | Remove a document linked to a case | `pega documents delete MYAPP-CASE-1 --document DOC-1` |
 | `pega tags list <caseId>` | List tags on a case | `pega tags list MYAPP-CASE-1` |
 | `pega tags add <caseId>` | Add one or more tags | `pega tags add MYAPP-CASE-1 --tag urgent --tag review` |
 | `pega tags delete <caseId>` | Remove a tag | `pega tags delete MYAPP-CASE-1 --tag urgent` |
@@ -116,12 +126,12 @@ The CLI is organized into 9 command groups: `auth`, `cases`, `assignments`, `cas
 | `pega related add <caseId>` | Add a relationship | `pega related add MYAPP-CASE-1 --related-case-id MYAPP-CASE-2 --relationship parent` |
 | `pega related delete <caseId>` | Remove a relationship | `pega related delete MYAPP-CASE-1 --related-case-id MYAPP-CASE-2` |
 | `pega participants list <caseId>` | List all participants on a case | `pega participants list MYAPP-CASE-1` |
-| `pega participants get <caseId>` | Get one participant | `pega participants get MYAPP-CASE-1 --role Owner` |
+| `pega participants get <caseId>` | Get one participant | `pega participants get MYAPP-CASE-1 --participant-id PEGA-PART-X` |
 | `pega participants add <caseId>` | Add a participant | `pega participants add MYAPP-CASE-1 --role Owner --user U1` |
-| `pega participants update <caseId>` | Update a participant's details | `pega participants update MYAPP-CASE-1 --role Owner --data @owner.json` |
-| `pega participants replace <caseId>` | Replace all participants in a role | `pega participants replace MYAPP-CASE-1 --role Reviewer --data @reviewers.json` |
-| `pega participants delete <caseId>` | Remove a participant | `pega participants delete MYAPP-CASE-1 --role Owner --user U1` |
-| `pega participants delete-bulk <caseId>` | Remove all participants in a role | `pega participants delete-bulk MYAPP-CASE-1 --role Reviewer` |
+| `pega participants update <caseId>` | Update a participant's details | `pega participants update MYAPP-CASE-1 --participant-id PEGA-PART-X --data @owner.json` |
+| `pega participants delete <caseId>` | Remove a participant | `pega participants delete MYAPP-CASE-1 --participant-id PEGA-PART-X` |
+| `pega participants list-roles <caseId>` | List participant roles configured on a case | `pega participants list-roles MYAPP-CASE-1` |
+| `pega participants get-role <caseId>` | Get details of a specific participant role | `pega participants get-role MYAPP-CASE-1 --role-id Owner` |
 
 ## Cases
 
@@ -158,6 +168,36 @@ pega cases get-page MYAPP-CASE-1 --page Customer
 # Walk the case hierarchy
 pega cases list-ancestors MYAPP-CASE-1
 pega cases list-descendants MYAPP-CASE-1
+
+# Bulk: list available bulk actions for several cases
+pega cases bulk-actions --cases CASE-1,CASE-2,CASE-3
+
+# Bulk: perform an action across multiple cases
+pega cases bulk-perform --action Approve --cases CASE-1,CASE-2 --data '{"reason":"OK"}'
+
+# Start an optional or stage process
+pega cases start-process MYAPP-CASE-1 --process pyAddNote
+
+# List stages of a case
+pega cases list-stages MYAPP-CASE-1
+
+# Refresh a case action's view
+pega cases refresh-action MYAPP-CASE-1 --action Approve
+
+# Recalculate calculated fields
+pega cases recalculate MYAPP-CASE-1 --action Approve
+
+# Refresh a named view
+pega cases refresh-view MYAPP-CASE-1 --view Summary
+
+# Compute calculated fields for a view
+pega cases calc-fields MYAPP-CASE-1 --view Summary --data @fields.json
+
+# Release the case lock (discard pending updates)
+pega cases discard-updates MYAPP-CASE-1
+
+# List configured attachment categories
+pega cases list-attachment-categories MYAPP-CASE-1
 ```
 
 Run `pega cases --help` for the full list of commands and flags.
@@ -188,14 +228,12 @@ pega assignments get-action ASSIGN-1 --action Submit
 # Refresh a field after a value change
 pega assignments refresh-action ASSIGN-1 --action Submit --data '{"field":"new"}'
 
-# List your worklist (DEFERRED to Phase 2b.2 — exits NOT_IMPLEMENTED)
-pega assignments list --max 50
+# Recalculate calculated fields for an assignment action
+pega assignments recalculate ASSIGN-1 --action Submit
 
-# Query a workbasket (DEFERRED to Phase 2b.2 — exits NOT_IMPLEMENTED)
-pega assignments query --workbasket WB-1 --max 50
+# Jump to a specific step
+pega assignments navigate-to-step ASSIGN-1 --step Step3
 ```
-
-`assignments list` and `assignments query` are deferred to Phase 2b.2: in Pega DX V2 the worklist and workbaskets are surfaced via data views (e.g. `D_pyMyWorkList`), not via dedicated REST collections. Once `pega data get-view` lands in 2b.2 those data views become accessible.
 
 Run `pega assignments --help` for the full list of commands and flags.
 
@@ -212,6 +250,9 @@ pega case-types get Uplus-FS-Work-ProductComplaint
 
 # Get the creation action view (use this to learn what fields create requires)
 pega case-types get-action Uplus-FS-Work-ProductComplaint --action Create
+
+# List bulk actions for a case type (Launchpad only)
+pega case-types list-bulk-actions Uplus-FS-Work-Loan
 ```
 
 `case-types get` filters the `case-types list` response client-side because Pega DX V2 has no `GET /casetypes/{id}` endpoint.
@@ -220,17 +261,15 @@ Run `pega case-types --help` for the full list.
 
 ## Documents
 
-Inspect documents linked to cases.
+Inspect and manage documents linked to cases.
 
 ```bash
-# Get a document's metadata (works in 2b.1)
+# Get a document's metadata
 pega documents get DOC-1
 
-# List documents on a case (DEFERRED to Phase 2b.2 — exits NOT_IMPLEMENTED)
-pega documents list MYAPP-CASE-1
+# Remove a document linked to a case
+pega documents delete MYAPP-CASE-1 --document DOC-1
 ```
-
-`documents list` is deferred to Phase 2b.2 because in Pega DX V2 documents are surfaced as case attachments rather than via a dedicated `/cases/{id}/documents` endpoint. The forthcoming `attachments` group will cover this.
 
 Run `pega documents --help` for the full list of commands and flags.
 
@@ -293,23 +332,23 @@ Manage case participants by role.
 # List all participants on a case
 pega participants list MYAPP-CASE-1
 
-# Get one participant
-pega participants get MYAPP-CASE-1 --role Owner
+# Get one participant (NEW: --participant-id replaces --role in 0.4.0)
+pega participants get MYAPP-CASE-1 --participant-id PEGA-PART-X
 
 # Add a participant
 pega participants add MYAPP-CASE-1 --role Owner --user U1
 
 # Update a participant's details
-pega participants update MYAPP-CASE-1 --role Owner --data @owner.json
+pega participants update MYAPP-CASE-1 --participant-id PEGA-PART-X --data @owner.json
 
-# Replace all participants in a role
-pega participants replace MYAPP-CASE-1 --role Reviewer --data @reviewers.json
+# Remove a participant
+pega participants delete MYAPP-CASE-1 --participant-id PEGA-PART-X
 
-# Remove a participant (--role acts as the participant identifier)
-pega participants delete MYAPP-CASE-1 --role Owner
+# List participant roles configured on a case
+pega participants list-roles MYAPP-CASE-1
 
-# Remove all participants in a role
-pega participants delete-bulk MYAPP-CASE-1 --role Reviewer
+# Get details of a specific participant role
+pega participants get-role MYAPP-CASE-1 --role-id Owner
 ```
 
 Run `pega participants --help` for the full list.
@@ -401,6 +440,14 @@ Run `pega auth diagnose` to identify where the problem is:
 - `PRECONDITION_FAILED (412)` — eTag mismatch on `assignments perform`. The assignment changed between the eTag fetch and the PATCH; retry the command.
 - `VALIDATION_FAIL (422)` — Pega rejected the payload. Inspect `--data` contents.
 - `RATE_LIMITED (429)` — Pega is throttling; back off and retry.
+
+## Breaking changes in 0.4.0
+
+`pega-dx-cli` 0.4.0 brings the CLI into faithful alignment with the official Pega DX V2 endpoint reference. The following changes are breaking:
+
+- `participants get`, `participants delete`, `participants update` now use `--participant-id` instead of `--role`. The second URL segment is the participant's instance ID (e.g. `PEGA-PART-123`), not the role name. Use `pega participants list` (or the new `pega participants list-roles`) to discover IDs. (`participants add` keeps `--role` — its POST body uses role-by-name, not the URL.)
+- `participants replace` and `participants delete-bulk` are removed. Their endpoints are not in the official Pega DX V2 docs and were inferred from the MCP source in 2b.1.
+- 4 NOT_IMPLEMENTED stubs from 2b.1 are removed: `documents list`, `assignments list`, `assignments query`, `cases get-page`. The first three find their replacements in upcoming `attachments` and `data-views` groups (Phase 2c.1); embedded pages are returned by `pega cases get` under `data.caseInfo.content`.
 
 ## Architecture and scope
 
