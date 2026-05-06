@@ -7,6 +7,8 @@ All notable changes to `pega-dx-cli` are documented here. The format follows [Ke
 ### BREAKING
 
 - **`participants get`, `participants delete`, `participants update`** — `--role` flag renamed to `--participant-id`. The second URL segment in the official Pega DX V2 spec is `{participantID}`, not `{role}`.
+- **`participants add`** — `--user` replaced by `--data` (content page JSON with person fields). The request now includes an auto-fetched eTag and uses `participantRoleID` as the body key.
+- **`cases recalculate`, `assignments recalculate`** — `--data` is now required with `{calculations:{fields:[...]}}` body. Previous mutation-body flags (`--page-instructions`, `--interest-page`, `--interest-page-action-id`, `--attachments`) are removed.
 - **`participants replace` and `participants delete-bulk`** removed. Endpoints do not exist in the official Pega DX V2 docs.
 
 ### Added

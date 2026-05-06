@@ -96,7 +96,7 @@ The CLI is organized into 9 command groups: `auth`, `cases`, `assignments`, `cas
 | `pega cases start-process <caseId>` | Start an optional or stage process | `pega cases start-process MYAPP-CASE-1 --process pyAddNote` |
 | `pega cases list-stages <caseId>` | List case stages | `pega cases list-stages MYAPP-CASE-1` |
 | `pega cases refresh-action <caseId>` | Refresh a case action's view | `pega cases refresh-action MYAPP-CASE-1 --action Approve` |
-| `pega cases recalculate <caseId>` | Recalculate calculated fields | `pega cases recalculate MYAPP-CASE-1 --action Approve` |
+| `pega cases recalculate <caseId>` | Recalculate calculated fields | `pega cases recalculate MYAPP-CASE-1 --action Approve --data '{"calculations":{"fields":[{"name":".Total","context":"content"}]}}'` |
 | `pega cases refresh-view <caseId>` | Refresh a named view | `pega cases refresh-view MYAPP-CASE-1 --view Summary` |
 | `pega cases calc-fields <caseId>` | Compute calculated fields for a view | `pega cases calc-fields MYAPP-CASE-1 --view Summary --data @fields.json` |
 | `pega cases discard-updates <caseId>` | Release the case lock | `pega cases discard-updates MYAPP-CASE-1` |
@@ -108,7 +108,7 @@ The CLI is organized into 9 command groups: `auth`, `cases`, `assignments`, `cas
 | `pega assignments navigate-back <id>` | Navigate back to the previous step | `pega assignments navigate-back ASSIGN-1` |
 | `pega assignments get-action <id>` | Get the action's view (fields, allowed values) | `pega assignments get-action ASSIGN-1 --action Submit` |
 | `pega assignments refresh-action <id>` | Refresh a field after a value change | `pega assignments refresh-action ASSIGN-1 --action Submit --data '{"field":"new"}'` |
-| `pega assignments recalculate <id>` | Recalculate calculated fields for an action | `pega assignments recalculate ASSIGN-1 --action Submit` |
+| `pega assignments recalculate <id>` | Recalculate calculated fields for an action | `pega assignments recalculate ASSIGN-1 --action Submit --data '{"calculations":{"fields":[{"name":".Total","context":"content"}]}}'` |
 | `pega assignments navigate-to-step <id>` | Jump to a specific step | `pega assignments navigate-to-step ASSIGN-1 --step Step3` |
 | `pega case-types list` | List all case types | `pega case-types list` |
 | `pega case-types get <id>` | Get full details of a case type | `pega case-types get MYAPP-WORK-CASE` |
@@ -127,7 +127,7 @@ The CLI is organized into 9 command groups: `auth`, `cases`, `assignments`, `cas
 | `pega related delete <caseId>` | Remove a relationship | `pega related delete MYAPP-CASE-1 --related-case-id MYAPP-CASE-2` |
 | `pega participants list <caseId>` | List all participants on a case | `pega participants list MYAPP-CASE-1` |
 | `pega participants get <caseId>` | Get one participant | `pega participants get MYAPP-CASE-1 --participant-id PEGA-PART-X` |
-| `pega participants add <caseId>` | Add a participant | `pega participants add MYAPP-CASE-1 --role Owner --user U1` |
+| `pega participants add <caseId>` | Add a participant | `pega participants add MYAPP-CASE-1 --role Customer --data '{"pyFirstName":"Jane","pyLastName":"Doe","pyEmail1":"jane@example.com","pyPhoneNumber":""}'` |
 | `pega participants update <caseId>` | Update a participant's details | `pega participants update MYAPP-CASE-1 --participant-id PEGA-PART-X --data @owner.json` |
 | `pega participants delete <caseId>` | Remove a participant | `pega participants delete MYAPP-CASE-1 --participant-id PEGA-PART-X` |
 | `pega participants list-roles <caseId>` | List participant roles configured on a case | `pega participants list-roles MYAPP-CASE-1` |
@@ -185,7 +185,7 @@ pega cases list-stages MYAPP-CASE-1
 pega cases refresh-action MYAPP-CASE-1 --action Approve
 
 # Recalculate calculated fields
-pega cases recalculate MYAPP-CASE-1 --action Approve
+pega cases recalculate MYAPP-CASE-1 --action Approve --data '{"calculations":{"fields":[{"name":".Total","context":"content"}]}}'
 
 # Refresh a named view
 pega cases refresh-view MYAPP-CASE-1 --view Summary
@@ -229,7 +229,7 @@ pega assignments get-action ASSIGN-1 --action Submit
 pega assignments refresh-action ASSIGN-1 --action Submit --data '{"field":"new"}'
 
 # Recalculate calculated fields for an assignment action
-pega assignments recalculate ASSIGN-1 --action Submit
+pega assignments recalculate ASSIGN-1 --action Submit --data '{"calculations":{"fields":[{"name":".Total","context":"content"}]}}'
 
 # Jump to a specific step
 pega assignments navigate-to-step ASSIGN-1 --step Step3
@@ -336,7 +336,7 @@ pega participants list MYAPP-CASE-1
 pega participants get MYAPP-CASE-1 --participant-id PEGA-PART-X
 
 # Add a participant
-pega participants add MYAPP-CASE-1 --role Owner --user U1
+pega participants add MYAPP-CASE-1 --role Customer --data '{"pyFirstName":"Jane","pyLastName":"Doe","pyEmail1":"jane@example.com","pyPhoneNumber":""}'
 
 # Update a participant's details
 pega participants update MYAPP-CASE-1 --participant-id PEGA-PART-X --data @owner.json
@@ -445,7 +445,9 @@ Run `pega auth diagnose` to identify where the problem is:
 
 `pega-dx-cli` 0.4.0 brings the CLI into faithful alignment with the official Pega DX V2 endpoint reference. The following changes are breaking:
 
-- `participants get`, `participants delete`, `participants update` now use `--participant-id` instead of `--role`. The second URL segment is the participant's instance ID (e.g. `PEGA-PART-123`), not the role name. Use `pega participants list` (or the new `pega participants list-roles`) to discover IDs. (`participants add` keeps `--role` — its POST body uses role-by-name, not the URL.)
+- `participants get`, `participants delete`, `participants update` now use `--participant-id` instead of `--role`. The second URL segment is the participant's instance ID (e.g. `PEGA-PART-123`), not the role name. Use `pega participants list` (or the new `pega participants list-roles`) to discover IDs.
+- `participants add` now uses `--data` (content page JSON) instead of `--user`, and requires an eTag (fetched automatically). Pass person fields: `{"pyFirstName":"Jane","pyLastName":"Doe","pyEmail1":"jane@example.com","pyPhoneNumber":""}`. The `--role` flag is retained but maps to `participantRoleID` in the request body.
+- `cases recalculate` and `assignments recalculate` now require `--data` with a `{calculations:{fields:[...]}}` body. The previous mutation-body flags (`--page-instructions`, `--interest-page`, etc.) are removed.
 - `participants replace` and `participants delete-bulk` are removed. Their endpoints are not in the official Pega DX V2 docs and were inferred from the MCP source in 2b.1.
 - 4 NOT_IMPLEMENTED stubs from 2b.1 are removed: `documents list`, `assignments list`, `assignments query`, `cases get-page`. The first three find their replacements in upcoming `attachments` and `data-views` groups (Phase 2c.1); embedded pages are returned by `pega cases get` under `data.caseInfo.content`.
 
