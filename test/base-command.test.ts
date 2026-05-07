@@ -309,6 +309,14 @@ class TestRunPost extends BaseCommand {
   }
 }
 
+class TestRunPostWithOpts extends BaseCommand {
+  static override id = 'test-run-post-with-opts';
+  async run(): Promise<void> {
+    const { flags } = await this.parse(TestRunPostWithOpts);
+    await this.runPost(flags as unknown as BaseFlags, '/data/D_SomeView', { dataViewParameters: {} }, { timeoutMs: 45000 });
+  }
+}
+
 describe('BaseCommand.runDelete', () => {
   beforeEach(() => {
     process.env.PEGA_BASE_URL = 'https://pega.example.com';
@@ -389,6 +397,20 @@ describe('BaseCommand.runPost', () => {
       expect(out.method).toBe('POST');
       expect(out.headers['Content-Type']).toBe('application/json');
       expect(out.body).toEqual({ user: 'U1' });
+    } finally {
+      captured.restore();
+    }
+  });
+
+  test('opts forwarded: request succeeds when opts: { timeoutMs: 45000 } is passed', async () => {
+    mockOAuthSuccess('https://pega.example.com');
+    nock('https://pega.example.com')
+      .post('/prweb/api/application/v2/data/D_SomeView', { dataViewParameters: {} })
+      .reply(200, { data: [] });
+    const captured = captureOutput();
+    try {
+      await TestRunPostWithOpts.run([]);
+      expect(JSON.parse(captured.stdout.join(''))).toEqual({ data: [] });
     } finally {
       captured.restore();
     }

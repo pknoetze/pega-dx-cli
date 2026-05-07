@@ -113,7 +113,7 @@ export abstract class BaseCommand extends Command {
     }
   }
 
-  protected async runPost(flags: BaseFlags, path: string, body: unknown): Promise<void> {
+  protected async runPost(flags: BaseFlags, path: string, body: unknown, opts?: RequestOpts): Promise<void> {
     const cfg = getConfig(flags.profile);
     const url = `${cfg.baseUrl}/prweb/api/application/v2${path}`;
     if (flags['dry-run']) {
@@ -127,7 +127,7 @@ export abstract class BaseCommand extends Command {
     }
     try {
       const client = await this.getClient(flags);
-      const result = await client.post(path, body);
+      const result = await client.post(path, body, opts);
       this.emit(result, flags);
     } catch (err) {
       this.fail(err);
