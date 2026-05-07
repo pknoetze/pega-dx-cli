@@ -18,6 +18,20 @@ export function mockV2(baseUrl: string): nock.Scope {
   return nock(baseUrl);
 }
 
+export function mockMultipartUpload(
+  baseUrl: string,
+  path: string,
+  status: number,
+  response: Record<string, unknown>,
+): nock.Scope {
+  // nock matches multipart by default if no body matcher is provided; the
+  // request body is opaque (binary multipart), but the path + method + status
+  // are the verifiable contract.
+  return nock(baseUrl)
+    .post(`/prweb/api/application/v2${path}`)
+    .reply(status, response);
+}
+
 export function cleanupNock(): void {
   nock.cleanAll();
   nock.restore();

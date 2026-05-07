@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import nock from 'nock';
 import { createPegaApiClient, type LoggedRequest, EXTENDED_TIMEOUT_MS } from '../../src/lib/api-client.js';
+import { mockMultipartUpload } from '../helpers/mock-pega-api.js';
 
 const BASE = 'https://pega.example.com';
 const V2 = `${BASE}/prweb/api/application/v2`;
@@ -195,5 +196,58 @@ describe('createPegaApiClient', () => {
     // The real bearer token must never be observable through the callback.
     const stringified = JSON.stringify(req.headers);
     expect(stringified).not.toContain('real-token-xyz');
+  });
+});
+
+describe('uploadMultipart', () => {
+  const baseUrl = 'https://pega.example.com';
+  const tokenProvider = async () => 'test-token';
+
+  beforeEach(() => {
+    if (!nock.isActive()) nock.activate();
+  });
+  afterEach(() => {
+    nock.cleanAll();
+  });
+
+  test('happy path — POSTs FormData and returns parsed JSON', async () => {
+    mockMultipartUpload(baseUrl, '/attachments/upload', 201, { ID: 'temp-uuid-123' });
+    const c = createPegaApiClient({ baseUrl, tokenProvider });
+    const fd = new FormData();
+    fd.append('file', new Blob(['hello']), 'hello.txt');
+    const res = await c.uploadMultipart<{ ID: string }>('/attachments/upload', fd);
+    expect(res).toEqual({ ID: 'temp-uuid-123' });
+  });
+
+  test('does not set Content-Type on the request (runtime adds boundary)', async () => {
+    let capturedHeaders: Record<string, string | string[] | undefined> = {};
+    nock(baseUrl)
+      .post('/prweb/api/application/v2/attachments/upload')
+      .reply(function () {
+        capturedHeaders = this.req.headers as Record<string, string | string[] | undefined>;
+        return [201, { ID: 'x' }];
+      });
+    const c = createPegaApiClient({ baseUrl, tokenProvider });
+    const fd = new FormData();
+    fd.append('file', new Blob(['x']));
+    await c.uploadMultipart('/attachments/upload', fd);
+    // Either no Content-Type at all (preferred) OR runtime-set multipart/form-data with boundary.
+    const ct = capturedHeaders['content-type'];
+    if (ct !== undefined) {
+      const ctStr = Array.isArray(ct) ? ct.join(',') : ct;
+      expect(ctStr).toMatch(/^multipart\/form-data; boundary=/);
+    }
+  });
+
+  test('5xx response → normalized error', async () => {
+    nock(baseUrl)
+      .post('/prweb/api/application/v2/attachments/upload')
+      .reply(500, { errors: [{ message: 'internal error' }] });
+    const c = createPegaApiClient({ baseUrl, tokenProvider });
+    const fd = new FormData();
+    fd.append('file', new Blob(['x']));
+    await expect(c.uploadMultipart('/attachments/upload', fd)).rejects.toMatchObject({
+      httpStatus: 500,
+    });
   });
 });

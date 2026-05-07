@@ -32,6 +32,7 @@ export interface PegaApiClient {
   patch<T>(path: string, body: unknown, opts?: RequestOpts): Promise<T>;
   delete<T>(path: string, opts?: RequestOpts): Promise<T>;
   getWithMeta<T>(path: string, opts?: RequestOpts): Promise<ResponseWithMeta<T>>;
+  uploadMultipart<T>(path: string, formData: FormData, opts?: RequestOpts): Promise<T>;
 }
 
 export interface PegaApiClientDeps {
@@ -83,12 +84,16 @@ async function doRequest<T>(
   path: string,
   body: unknown,
   opts: RequestOpts = {},
+  bodyInit?: BodyInit,
+  bodyForLog?: string,
 ): Promise<ResponseWithMeta<T>> {
   const token = await deps.tokenProvider();
   const url = `${v2Root(deps.baseUrl)}${path}`;
   const hasBody = body !== undefined && method !== 'GET' && method !== 'DELETE';
-  const headers = buildHeaders(token, opts.extraHeaders, hasBody);
-  const serialized = hasBody ? JSON.stringify(body) : undefined;
+  // When bodyInit is provided (e.g. FormData), do NOT set Content-Type — the runtime adds it.
+  const headers = buildHeaders(token, opts.extraHeaders, bodyInit === undefined && hasBody);
+  const fetchBody: BodyInit | undefined = bodyInit ?? (hasBody ? JSON.stringify(body) : undefined);
+  const logBody: string | undefined = bodyInit !== undefined ? bodyForLog : (hasBody ? JSON.stringify(body) : undefined);
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), opts.timeoutMs ?? DEFAULT_TIMEOUT_MS);
@@ -98,7 +103,7 @@ async function doRequest<T>(
     response = await fetch(url, {
       method,
       headers,
-      body: serialized,
+      body: fetchBody,
       signal: controller.signal,
     });
   } catch (err) {
@@ -114,7 +119,7 @@ async function doRequest<T>(
   });
 
   deps.onVerbose?.(
-    { method, url, headers: redactAuthHeader(headers), body: serialized },
+    { method, url, headers: redactAuthHeader(headers), body: logBody },
     { status: response.status, headers: responseHeaders, body: parsed },
   );
 
@@ -150,6 +155,13 @@ export function createPegaApiClient(deps: PegaApiClientDeps): PegaApiClient {
     },
     async getWithMeta<T>(path: string, opts?: RequestOpts): Promise<ResponseWithMeta<T>> {
       return doRequest<T>(deps, 'GET', path, undefined, opts);
+    },
+    async uploadMultipart<T>(path: string, formData: FormData, opts?: RequestOpts): Promise<T> {
+      // buildHeaders is called with bodyPresent=false (via bodyInit path) so no
+      // Content-Type: application/json is added. The runtime sets the correct
+      // multipart/form-data; boundary=... header automatically.
+      const r = await doRequest<T>(deps, 'POST', path, undefined, opts, formData, '<FormData>');
+      return r.data;
     },
   };
 }
