@@ -395,6 +395,64 @@ describe('BaseCommand.runPost', () => {
   });
 });
 
+describe('runPatch (no-eTag)', () => {
+  class TestPatch extends BaseCommand {
+    static override flags = {};
+    override async run(): Promise<void> {
+      const { flags } = await this.parse(TestPatch);
+      await this.runPatch(flags as unknown as BaseFlags, '/attachments/test-id', {
+        name: 'newname',
+      });
+    }
+  }
+
+  beforeEach(() => {
+    process.env.PEGA_BASE_URL = 'https://pega.example.com';
+    process.env.PEGA_CLIENT_ID = 'cid';
+    process.env.PEGA_CLIENT_SECRET = 'sec';
+    process.env.PEGA_NO_CACHE = 'true';
+    if (!nock.isActive()) nock.activate();
+  });
+  afterEach(() => {
+    cleanupNock();
+    delete process.env.PEGA_BASE_URL;
+    delete process.env.PEGA_CLIENT_ID;
+    delete process.env.PEGA_CLIENT_SECRET;
+    delete process.env.PEGA_NO_CACHE;
+  });
+
+  test('issues PATCH without If-Match header and emits response', async () => {
+    mockOAuthSuccess('https://pega.example.com');
+    const scope = nock('https://pega.example.com', {
+      badheaders: ['if-match'],
+    })
+      .patch('/prweb/api/application/v2/attachments/test-id', { name: 'newname' })
+      .reply(200, { updated: true });
+    const captured = captureOutput();
+    try {
+      await TestPatch.run([]);
+      expect(scope.isDone()).toBe(true);
+      expect(JSON.parse(captured.stdout.join(''))).toEqual({ updated: true });
+    } finally {
+      captured.restore();
+    }
+  });
+
+  test('--dry-run shows PATCH with Content-Type and body, no If-Match', async () => {
+    const captured = captureOutput();
+    try {
+      await TestPatch.run(['--dry-run']);
+      const out = JSON.parse(captured.stdout.join(''));
+      expect(out.method).toBe('PATCH');
+      expect(out.headers['Content-Type']).toBe('application/json');
+      expect(out.body).toEqual({ name: 'newname' });
+      expect(out.headers['If-Match']).toBeUndefined();
+    } finally {
+      captured.restore();
+    }
+  });
+});
+
 class TestRunMutateWithEtag extends BaseCommand {
   static override id = 'test-run-mutate';
   async run(): Promise<void> {

@@ -134,6 +134,27 @@ export abstract class BaseCommand extends Command {
     }
   }
 
+  protected async runPatch(flags: BaseFlags, path: string, body: unknown): Promise<void> {
+    const cfg = getConfig(flags.profile);
+    const url = `${cfg.baseUrl}/prweb/api/application/v2${path}`;
+    if (flags['dry-run']) {
+      this.emitDryRun({
+        method: 'PATCH',
+        url,
+        headers: dryRunHeadersFor('PATCH', { hasBody: true }),
+        body,
+      });
+      return;
+    }
+    try {
+      const client = await this.getClient(flags);
+      const result = await client.patch(path, body);
+      this.emit(result, flags);
+    } catch (err) {
+      this.fail(err);
+    }
+  }
+
   protected async runMutateWithEtag(
     flags: BaseFlags,
     method: 'POST' | 'PUT' | 'PATCH',
