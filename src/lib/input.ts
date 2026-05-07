@@ -75,3 +75,55 @@ export async function composeMutationBody(
 
   return body;
 }
+
+export interface DataQueryBodyFlags {
+  data?: string;
+  params?: string;
+  max?: number;
+  page?: number;
+  'include-total'?: boolean;
+}
+
+export type DataQueryBodyShape = 'query' | 'count-or-metadata';
+
+export async function composeDataQueryBody(
+  flags: DataQueryBodyFlags,
+  shape: DataQueryBodyShape,
+): Promise<Record<string, unknown>> {
+  const hasPagingFlags =
+    flags.max !== undefined || flags.page !== undefined || flags['include-total'] !== undefined;
+
+  // count-or-metadata rejects paging flags entirely
+  if (shape === 'count-or-metadata' && hasPagingFlags) {
+    throw invalidArgs('paging flags (--max, --page, --include-total) are not valid for this command');
+  }
+
+  const hasSimpleFlags = flags.params !== undefined || hasPagingFlags;
+
+  // --data is mutually exclusive with simple flags
+  if (flags.data !== undefined && hasSimpleFlags) {
+    throw invalidArgs('--data is mutually exclusive with --params/--max/--page/--include-total');
+  }
+
+  // --data only: return parsed body verbatim
+  if (flags.data !== undefined) {
+    return (await parseDataInput(flags.data, '--data')) as Record<string, unknown>;
+  }
+
+  // Compose from simple flags
+  const body: Record<string, unknown> = {};
+
+  if (flags.params !== undefined) {
+    body.dataViewParameters = await parseDataInput(flags.params, '--params');
+  }
+
+  if (shape === 'query' && hasPagingFlags) {
+    const paging: Record<string, unknown> = {};
+    if (flags.max !== undefined) paging.maxResultsToFetch = flags.max;
+    if (flags.page !== undefined) paging.pageNumber = flags.page;
+    if (flags['include-total'] !== undefined) paging.includeTotalCount = flags['include-total'];
+    body.paging = paging;
+  }
+
+  return body;
+}
