@@ -147,6 +147,7 @@ async function doRawRequest(
   const token = await deps.tokenProvider();
   const url = `${v2Root(deps.baseUrl)}${path}`;
   const headers = buildHeaders(token, opts.extraHeaders, false);
+  headers['Accept'] = '*/*';
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), opts.timeoutMs ?? DEFAULT_TIMEOUT_MS);
