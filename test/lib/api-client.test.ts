@@ -197,6 +197,76 @@ describe('createPegaApiClient', () => {
     const stringified = JSON.stringify(req.headers);
     expect(stringified).not.toContain('real-token-xyz');
   });
+
+  test('getRaw returns Buffer body + content-type for binary response', async () => {
+    const bytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a]); // PNG magic
+    nock(BASE)
+      .get('/prweb/api/application/v2/files/F-1')
+      .matchHeader('Authorization', 'Bearer test-token')
+      .reply(200, bytes, { 'Content-Type': 'application/octet-stream' });
+
+    const res = await client().getRaw('/files/F-1');
+    expect(Buffer.isBuffer(res.data)).toBe(true);
+    expect(res.data.equals(bytes)).toBe(true);
+    expect(res.contentType).toBe('application/octet-stream');
+    expect(res.status).toBe(200);
+  });
+
+  test('getRaw returns Buffer body for application/javascript', async () => {
+    const js = "export const x = 1;";
+    nock(BASE)
+      .get('/prweb/api/application/v2/components/C-1')
+      .reply(200, js, { 'Content-Type': 'application/javascript' });
+
+    const res = await client().getRaw('/components/C-1');
+    expect(res.data.toString('utf8')).toBe(js);
+    expect(res.contentType).toBe('application/javascript');
+  });
+
+  test('getRaw 404 with JSON error body throws NOT_FOUND normalized', async () => {
+    nock(BASE)
+      .get('/prweb/api/application/v2/files/MISSING')
+      .reply(404, { localizedValue: 'File not found' }, { 'Content-Type': 'application/json' });
+
+    await expect(client().getRaw('/files/MISSING')).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+      httpStatus: 404,
+    });
+  });
+
+  test('getRaw 500 with non-JSON body wraps text and throws', async () => {
+    nock(BASE)
+      .get('/prweb/api/application/v2/files/BOOM')
+      .reply(500, 'internal explosion', { 'Content-Type': 'text/plain' });
+
+    await expect(client().getRaw('/files/BOOM')).rejects.toMatchObject({
+      code: 'INTERNAL_SERVER_ERROR',
+      httpStatus: 500,
+      message: expect.stringContaining('internal explosion'),
+    });
+  });
+
+  test('getRaw verbose logger logs binary descriptor (not raw bytes)', async () => {
+    const bytes = Buffer.from([0x00, 0x01, 0x02, 0x03]);
+    nock(BASE)
+      .get('/prweb/api/application/v2/files/F-2')
+      .reply(200, bytes, { 'Content-Type': 'application/octet-stream' });
+
+    const reqs: LoggedRequest[] = [];
+    const ress: { status: number; body: unknown }[] = [];
+    const c = createPegaApiClient({
+      baseUrl: BASE,
+      tokenProvider: async () => 'tok',
+      onVerbose: (req, res) => {
+        reqs.push(req);
+        ress.push({ status: res.status, body: res.body });
+      },
+    });
+    await c.getRaw('/files/F-2');
+    expect(ress).toHaveLength(1);
+    expect(typeof ress[0]!.body).toBe('string');
+    expect(ress[0]!.body).toMatch(/<binary: 4 bytes, content-type: application\/octet-stream>/);
+  });
 });
 
 describe('uploadMultipart', () => {

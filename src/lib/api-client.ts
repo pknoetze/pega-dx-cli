@@ -25,6 +25,13 @@ export interface ResponseWithMeta<T> {
   status: number;
 }
 
+export interface RawResponse {
+  data: Buffer;
+  contentType: string;
+  headers: Record<string, string>;
+  status: number;
+}
+
 export interface PegaApiClient {
   get<T>(path: string, opts?: RequestOpts): Promise<T>;
   post<T>(path: string, body: unknown, opts?: RequestOpts): Promise<T>;
@@ -33,6 +40,7 @@ export interface PegaApiClient {
   delete<T>(path: string, opts?: RequestOpts): Promise<T>;
   getWithMeta<T>(path: string, opts?: RequestOpts): Promise<ResponseWithMeta<T>>;
   uploadMultipart<T>(path: string, formData: FormData, opts?: RequestOpts): Promise<T>;
+  getRaw(path: string, opts?: RequestOpts): Promise<RawResponse>;
 }
 
 export interface PegaApiClientDeps {
@@ -131,6 +139,66 @@ async function doRequest<T>(
   return { data: parsed as T, eTag, status: response.status };
 }
 
+async function doRawRequest(
+  deps: PegaApiClientDeps,
+  path: string,
+  opts: RequestOpts = {},
+): Promise<RawResponse> {
+  const token = await deps.tokenProvider();
+  const url = `${v2Root(deps.baseUrl)}${path}`;
+  const headers = buildHeaders(token, opts.extraHeaders, false);
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), opts.timeoutMs ?? DEFAULT_TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch(url, { method: 'GET', headers, signal: controller.signal });
+  } catch (err) {
+    clearTimeout(timeout);
+    throw fromNetworkError(err as Error);
+  }
+  clearTimeout(timeout);
+
+  const responseHeaders: Record<string, string> = {};
+  response.headers.forEach((v, k) => {
+    responseHeaders[k] = v;
+  });
+  const contentType = response.headers.get('content-type') ?? '';
+
+  if (!response.ok) {
+    let parsed: unknown;
+    if (contentType.includes('application/json')) {
+      try {
+        parsed = await response.json();
+      } catch {
+        parsed = {};
+      }
+    } else {
+      const text = await response.text();
+      parsed = text ? { message: text } : {};
+    }
+    deps.onVerbose?.(
+      { method: 'GET', url, headers: redactAuthHeader(headers) },
+      { status: response.status, headers: responseHeaders, body: parsed },
+    );
+    throw fromHttpResponse(response, parsed);
+  }
+
+  const buf = Buffer.from(await response.arrayBuffer());
+
+  deps.onVerbose?.(
+    { method: 'GET', url, headers: redactAuthHeader(headers) },
+    {
+      status: response.status,
+      headers: responseHeaders,
+      body: `<binary: ${buf.length} bytes, content-type: ${contentType}>`,
+    },
+  );
+
+  return { data: buf, contentType, headers: responseHeaders, status: response.status };
+}
+
 export function createPegaApiClient(deps: PegaApiClientDeps): PegaApiClient {
   return {
     async get<T>(path: string, opts?: RequestOpts): Promise<T> {
@@ -162,6 +230,9 @@ export function createPegaApiClient(deps: PegaApiClientDeps): PegaApiClient {
       // multipart/form-data; boundary=... header automatically.
       const r = await doRequest<T>(deps, 'POST', path, undefined, opts, formData, '<FormData>');
       return r.data;
+    },
+    async getRaw(path: string, opts?: RequestOpts): Promise<RawResponse> {
+      return doRawRequest(deps, path, opts);
     },
   };
 }
