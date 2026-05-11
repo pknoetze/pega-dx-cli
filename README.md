@@ -74,7 +74,7 @@ pega cases get MYAPP-CASE-1
 
 ## Command reference
 
-The CLI is organized into 9 command groups: `auth`, `cases`, `assignments`, `case-types`, `documents`, `tags`, `followers`, `related`, and `participants`.
+The CLI is organized into 11 command groups: `auth`, `cases`, `assignments`, `case-types`, `documents`, `tags`, `followers`, `related`, `participants`, `attachments`, and `data`.
 
 | Command | Description | Example |
 |---|---|---|
@@ -132,6 +132,27 @@ The CLI is organized into 9 command groups: `auth`, `cases`, `assignments`, `cas
 | `pega participants delete <caseId>` | Remove a participant | `pega participants delete MYAPP-CASE-1 --participant-id PEGA-PART-X` |
 | `pega participants list-roles <caseId>` | List participant roles configured on a case | `pega participants list-roles MYAPP-CASE-1` |
 | `pega participants get-role <caseId>` | Get details of a specific participant role | `pega participants get-role MYAPP-CASE-1 --role-id Owner` |
+| `pega attachments upload --file <path>` | Upload a file (multipart POST) | `pega attachments upload --file ./invoice.pdf` |
+| `pega attachments add <caseId>` | Atomically link attachments to a case | `pega attachments add MYAPP-CASE-1 --attachments '[{"type":"File","ID":"<tmp-id>"}]'` |
+| `pega attachments list <caseId>` | List attachments on a case | `pega attachments list MYAPP-CASE-1` |
+| `pega attachments get <id>` | Retrieve attachment content or metadata | `pega attachments get ATTACH-1 --output /tmp/x.pdf` |
+| `pega attachments delete <id>` | Delete a single attachment | `pega attachments delete ATTACH-1` |
+| `pega attachments patch <id>` | Edit attachment name and/or category | `pega attachments patch ATTACH-1 --name "invoice-final.pdf"` |
+| `pega data list-objects` | List all data objects | `pega data list-objects` |
+| `pega data list-pages` | List all data pages | `pega data list-pages` |
+| `pega data get <id>` | Fetch a single data view record | `pega data get D_OrderHeader` |
+| `pega data get-metadata <id>` | Get data view metadata | `pega data get-metadata D_OrderList` |
+| `pega data query <id>` | POST query against a data view | `pega data query D_OrderList --max 50 --page 2` |
+| `pega data count <id>` | Count records in a data view | `pega data count D_OrderList --params '{"Status":"Open"}'` |
+| `pega data query-metadata <id>` | POST metadata query against a data view | `pega data query-metadata D_OrderList` |
+| `pega data query-view <id>` | POST query against a data view variant | `pega data query-view D_OrderList --view V1 --max 5` |
+| `pega data create <id>` | Create a savable data record | `pega data create D_OrderHeader --data '{"orderId":"O-1"}'` |
+| `pega data update <id>` | Replace a savable data record (eTag) | `pega data update D_OrderHeader --data @full-record.json` |
+| `pega data patch <id>` | Partially update a savable data record (eTag) | `pega data patch D_OrderHeader --data '{"amount":200}'` |
+| `pega data delete <id>` | Delete a savable data record | `pega data delete D_OrderHeader` |
+| `pega data list-actions <id>` | List actions available on a data record | `pega data list-actions D_OrderHeader` |
+| `pega data get-action <id>` | Get a data-record action's view | `pega data get-action D_OrderHeader --action ApproveOrder` |
+| `pega data perform-action <id>` | Perform a data-record action | `pega data perform-action D_OrderHeader --action ApproveOrder --data '{"approver":"alice"}'` |
 
 ## Cases
 
@@ -352,6 +373,117 @@ pega participants get-role MYAPP-CASE-1 --role-id Owner
 ```
 
 Run `pega participants --help` for the full list.
+
+## Attachments
+
+The `attachments` group manages file and URL attachments on cases.
+
+```bash
+# Upload a file — returns a temporary attachment ID
+pega attachments upload --file ./invoice.pdf
+# → {"ID":"<temp-uuid>"}
+
+# Append a unique suffix to the filename on the server
+pega attachments upload --file ./invoice.pdf --append-unique-id
+
+# Atomically link one or more attachments to a case
+pega attachments add MYAPP-CASE-1 --attachments '[
+  {"type":"File","category":"File","ID":"<temp-uuid>"},
+  {"type":"URL","category":"URL","name":"docs","url":"https://docs.pega.com"}
+]'
+
+# List attachments on a case
+pega attachments list MYAPP-CASE-1
+pega attachments list MYAPP-CASE-1 --include-thumbnails
+
+# Retrieve attachment content (dual-mode)
+pega attachments get ATTACH-1                      # raw JSON response
+pega attachments get ATTACH-1 --output /tmp/x.pdf  # decoded bytes written to disk; emits {path,bytes,type}
+
+# Delete a single attachment
+pega attachments delete ATTACH-1
+
+# Edit attachment name and/or category (no eTag required)
+pega attachments patch ATTACH-1 --name "invoice-final.pdf"
+pega attachments patch ATTACH-1 --category Receipts
+```
+
+`attachments get` assumes the API returns content wrapped in JSON (Base64-encoded for `type=File`, a URL string for `type=URL`, HTML for `type=Correspondence`). With `--output`, the content is decoded and written to disk.
+
+Run `pega attachments --help` for the full list of commands and flags.
+
+## Data
+
+The `data` group covers data objects, data views, savable data record CRUD, and data-record actions. The `<id>` argument is the **data view ID** (e.g. `D_OrderHeader`).
+
+### Catalog
+
+```bash
+pega data list-objects   # GET /data_objects
+pega data list-pages     # GET /data_pages
+```
+
+### Read / Query
+
+```bash
+# Fetch a single data view record
+pega data get D_OrderHeader
+
+# Get data view metadata (GET)
+pega data get-metadata D_OrderList
+
+# POST query — returns rows
+pega data query D_OrderList
+pega data query D_OrderList --max 50 --page 2 --include-total
+pega data query D_OrderList --params '{"FromDate":"2026-01-01"}'
+pega data query D_OrderList --data @body.json   # full body escape hatch (mutually exclusive with --params/--max/--page/--include-total)
+
+# Count records
+pega data count D_OrderList --params '{"Status":"Open"}'
+
+# POST metadata query
+pega data query-metadata D_OrderList
+
+# POST query against a specific data view variant
+pega data query-view D_OrderList --view V1 --max 5
+```
+
+The four query commands (`query`, `count`, `query-metadata`, `query-view`) use an extended **45-second timeout**. `--data` is mutually exclusive with `--params`/`--max`/`--page`/`--include-total` — pick one form.
+
+### Record CRUD
+
+```bash
+# Create a savable data record
+pega data create D_OrderHeader --data '{"orderId":"O-1"}'
+
+# Replace a savable data record (eTag auto-fetched)
+pega data update D_OrderHeader --data @full-record.json
+
+# Partially update a savable data record (eTag auto-fetched)
+pega data patch D_OrderHeader --data '{"amount":200}'
+
+# Delete a savable data record
+pega data delete D_OrderHeader
+```
+
+`data update` and `data patch` both require an eTag (fetched automatically from the data view before mutation).
+
+### Record Actions
+
+```bash
+# List actions available on a data record
+pega data list-actions D_OrderHeader
+
+# Get a data-record action's view
+pega data get-action D_OrderHeader --action ApproveOrder
+
+# Perform a data-record action
+pega data perform-action D_OrderHeader --action ApproveOrder --data '{"approver":"alice"}'
+```
+
+`data perform-action` accepts the same `--data`/`--page-instructions`/`--attachments` flags as `cases perform-action` and `assignments perform`.
+
+Run `pega data --help` for the full list of commands and flags.
 
 ## Global flags
 

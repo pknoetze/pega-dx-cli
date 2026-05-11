@@ -2,6 +2,38 @@
 
 All notable changes to `pega-dx-cli` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-05-11
+
+### Added — `attachments` group (6 commands)
+
+- `pega attachments upload --file <path> [--append-unique-id]` — `POST /attachments/upload` (multipart)
+- `pega attachments add <caseId> --attachments <json>` — `POST /cases/{caseID}/attachments` (atomic batch)
+- `pega attachments list <caseId> [--include-thumbnails]` — `GET /cases/{caseID}/attachments`
+- `pega attachments get <id> [--output <path>]` — `GET /attachments/{attachmentID}` (dual-mode: raw JSON or decoded file write)
+- `pega attachments delete <id>` — `DELETE /attachments/{attachmentID}`
+- `pega attachments patch <id> [--name] [--category]` — `PATCH /attachments/{attachmentID}` (no eTag)
+
+### Added — `data` group (15 commands)
+
+Catalog: `data list-objects`, `data list-pages`.
+Read/query: `data get`, `data get-metadata`, `data query`, `data count`, `data query-metadata`, `data query-view`.
+Record CRUD: `data create`, `data update`, `data patch`, `data delete`.
+Actions: `data list-actions`, `data get-action`, `data perform-action`.
+
+### Internal
+
+- New: `PegaApiClient.uploadMultipart<T>(path, formData, opts?)` for multipart POSTs.
+- New: `BaseCommand.runPatch(flags, path, body, opts?)` — no-eTag PATCH wrapper, mirrors `runPost`.
+- New: `composeDataQueryBody(flags, shape)` in `src/lib/input.ts`. Two shapes: `'query'` and `'count-or-metadata'`.
+- Changed: `BaseCommand.runPost` accepts an optional `RequestOpts` parameter (additive; existing callers unaffected). Used by the four `data` query commands to set `timeoutMs: EXTENDED_TIMEOUT_MS`.
+- New: `mockMultipartUpload` test helper in `test/helpers/mock-pega-api.ts`.
+
+### Notes
+
+- `attachments get` assumes the API returns content wrapped in JSON (Base64 for File, URL string for URL, HTML for Correspondence).
+- `data update`/`data patch` assume eTag-required (matching case/assignment mutations); `runMutateWithEtag` errors loudly if the GET-parent omits `ETag`.
+- `data perform-action` body shape mirrors `cases perform-action` (`{content, pageInstructions, attachments}`).
+
 ## [0.4.0] - 2026-05-06
 
 ### BREAKING
