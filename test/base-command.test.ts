@@ -589,3 +589,39 @@ describe('BaseCommand.runMutateWithEtag', () => {
     expect(captured.stderr.join('')).toContain('MISSING_ETAG');
   });
 });
+
+describe('runPut/runPatch with body=undefined (no-body request)', () => {
+  class PutNoBodyCmd extends BaseCommand {
+    static override description = 'put no body';
+    async run(): Promise<void> {
+      const { flags } = await this.parse(PutNoBodyCmd);
+      await this.runPut(flags as BaseFlags, '/x', undefined);
+    }
+  }
+
+  class PatchNoBodyCmd extends BaseCommand {
+    static override description = 'patch no body';
+    async run(): Promise<void> {
+      const { flags } = await this.parse(PatchNoBodyCmd);
+      await this.runPatch(flags as BaseFlags, '/x', undefined);
+    }
+  }
+
+  test('runPut dry-run with body=undefined emits no Content-Type and no body key', async () => {
+    captured = captureOutput();
+    await PutNoBodyCmd.run(['--dry-run']);
+    const out = JSON.parse(captured.stdout.join(''));
+    expect(out.method).toBe('PUT');
+    expect(out.headers['Content-Type']).toBeUndefined();
+    expect(out).not.toHaveProperty('body');
+  });
+
+  test('runPatch dry-run with body=undefined emits no Content-Type and no body key', async () => {
+    captured = captureOutput();
+    await PatchNoBodyCmd.run(['--dry-run']);
+    const out = JSON.parse(captured.stdout.join(''));
+    expect(out.method).toBe('PATCH');
+    expect(out.headers['Content-Type']).toBeUndefined();
+    expect(out).not.toHaveProperty('body');
+  });
+});

@@ -138,12 +138,14 @@ export abstract class BaseCommand extends Command {
     const cfg = getConfig(flags.profile);
     const url = `${cfg.baseUrl}/prweb/api/application/v2${path}`;
     if (flags['dry-run']) {
-      this.emitDryRun({
+      const hasBody = body !== undefined;
+      const dryRun: DryRunRequest = {
         method: 'PATCH',
         url,
-        headers: dryRunHeadersFor('PATCH', { hasBody: true }),
-        body,
-      });
+        headers: dryRunHeadersFor('PATCH', { hasBody }),
+        ...(hasBody ? { body } : {}),
+      };
+      this.emitDryRun(dryRun);
       return;
     }
     try {
@@ -159,12 +161,14 @@ export abstract class BaseCommand extends Command {
     const cfg = getConfig(flags.profile);
     const url = `${cfg.baseUrl}/prweb/api/application/v2${path}`;
     if (flags['dry-run']) {
-      this.emitDryRun({
+      const hasBody = body !== undefined;
+      const dryRun: DryRunRequest = {
         method: 'PUT',
         url,
-        headers: dryRunHeadersFor('PUT', { hasBody: true }),
-        body,
-      });
+        headers: dryRunHeadersFor('PUT', { hasBody }),
+        ...(hasBody ? { body } : {}),
+      };
+      this.emitDryRun(dryRun);
       return;
     }
     try {
