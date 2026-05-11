@@ -516,18 +516,23 @@ Conversational AI agents (AgentX). All commands require an authenticated profile
 ### Example: full chat round trip
 
 ```bash
-# Capture conversation ID
-CONV=$(pega ai-agents start-conversation MyAgent --context-id MYORG-WORK\!M-123 --format json | jq -r .ID)
+# Find your agent ID (combine agentClass + "!" + name from the list output)
+pega ai-agents list --format json | jq '.[] | .agentClass + "!" + .name'
+# e.g. "@baseclass!MyAgent"
+
+# Start a conversation
+CONV=$(pega ai-agents start-conversation "@baseclass!MyAgent" --format json | jq -r .ID)
 
 # Send a message
-pega ai-agents send-message MyAgent --conversation "$CONV" --request "What's my balance?"
+pega ai-agents send-message "@baseclass!MyAgent" --conversation "$CONV" --request "What's my balance?"
 
 # Close when done
-pega ai-agents close-conversation MyAgent --conversation "$CONV"
+pega ai-agents close-conversation "@baseclass!MyAgent" --conversation "$CONV"
 ```
 
 ### Notes
 
+- **Agent ID format:** `pega ai-agents list` returns each agent's `name` and `agentClass` fields. The `<agentId>` argument for conversation commands is `{agentClass}!{name}` — e.g. if `list` shows `"agentClass": "@baseclass"` and `"name": "MyAgent"`, use `@baseclass!MyAgent`. Shell-quoting the `@` is not required but safe.
 - Field-name casing: API body uses `Request` (capital R) and `Attachments` (capital A) — the CLI shapes these for you from `--request` / `--attachments`.
 - `--attachments` follows the YAML element shape: `[{type, ID, category, name, attachmentFieldName, delete, pyRouteToWorkbasket}, ...]`.
 
