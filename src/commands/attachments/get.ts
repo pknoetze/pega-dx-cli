@@ -47,25 +47,23 @@ export default class AttachmentsGet extends BaseCommand {
       const client = await this.getClient(baseFlags);
       const result = await client.get(path) as Record<string, unknown>;
       const outputPath = flags.output;
-      const type = result['type'] as string | undefined;
-
-      if (type === 'File') {
-        const content = result['content'] as string;
-        const bytes = Buffer.from(content, 'base64');
+      // Pega DX API returns content in `message` (Base64) for file attachments,
+      // `url` for URL attachments, and `content` (HTML) for Correspondence.
+      // There is no `type` discriminator in the GET response itself.
+      if (typeof result['message'] === 'string') {
+        const bytes = Buffer.from(result['message'] as string, 'base64');
         await fsPromises.writeFile(outputPath, bytes);
         this.emit({ path: outputPath, bytes: bytes.length, type: 'File' }, baseFlags);
-      } else if (type === 'URL') {
-        const urlContent = result['url'] as string ?? result['content'] as string;
-        await fsPromises.writeFile(outputPath, urlContent, 'utf8');
+      } else if (typeof result['url'] === 'string') {
+        await fsPromises.writeFile(outputPath, result['url'] as string, 'utf8');
         this.emit({ path: outputPath, type: 'URL' }, baseFlags);
-      } else if (type === 'Correspondence') {
-        const htmlContent = result['content'] as string;
-        await fsPromises.writeFile(outputPath, htmlContent, 'utf8');
+      } else if (typeof result['content'] === 'string') {
+        await fsPromises.writeFile(outputPath, result['content'] as string, 'utf8');
         this.emit({ path: outputPath, type: 'Correspondence' }, baseFlags);
       } else {
         const fallback = JSON.stringify(result);
         await fsPromises.writeFile(outputPath, fallback, 'utf8');
-        this.emit({ path: outputPath, type: type ?? 'unknown' }, baseFlags);
+        this.emit({ path: outputPath, type: 'unknown' }, baseFlags);
       }
     } catch (err) {
       this.fail(err);

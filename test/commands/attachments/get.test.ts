@@ -65,13 +65,13 @@ describe('attachments get', () => {
     });
   });
 
-  test('--output with type=File: Base64-decodes content and writes bytes to disk', async () => {
+  test('--output with message field: Base64-decodes and writes bytes to disk', async () => {
     mockOAuthSuccess('https://pega.example.com');
     const originalContent = 'Hello PDF content';
     const base64Content = Buffer.from(originalContent).toString('base64');
     nock('https://pega.example.com')
       .get('/prweb/api/application/v2/attachments/ATTACH-1')
-      .reply(200, { type: 'File', content: base64Content, name: 'doc.pdf' });
+      .reply(200, { message: base64Content });
 
     captured = captureOutput();
     await AttachmentsGet.run(['ATTACH-1', '--output', '/tmp/out.pdf']);
@@ -84,11 +84,11 @@ describe('attachments get', () => {
     expect(written).toBe(originalContent);
   });
 
-  test('--output with type=URL: writes URL string to disk', async () => {
+  test('--output with url field: writes URL string to disk', async () => {
     mockOAuthSuccess('https://pega.example.com');
     nock('https://pega.example.com')
       .get('/prweb/api/application/v2/attachments/ATTACH-URL')
-      .reply(200, { type: 'URL', url: 'https://example.com/file.pdf' });
+      .reply(200, { url: 'https://example.com/file.pdf' });
 
     captured = captureOutput();
     await AttachmentsGet.run(['ATTACH-URL', '--output', '/tmp/link.txt']);
@@ -99,12 +99,12 @@ describe('attachments get', () => {
     expect(written).toBe('https://example.com/file.pdf');
   });
 
-  test('--output with type=Correspondence: writes HTML content to disk', async () => {
+  test('--output with content field: writes HTML to disk (Correspondence)', async () => {
     mockOAuthSuccess('https://pega.example.com');
     const htmlContent = '<html><body>Hello</body></html>';
     nock('https://pega.example.com')
       .get('/prweb/api/application/v2/attachments/ATTACH-CORR')
-      .reply(200, { type: 'Correspondence', content: htmlContent });
+      .reply(200, { content: htmlContent });
 
     captured = captureOutput();
     await AttachmentsGet.run(['ATTACH-CORR', '--output', '/tmp/corr.html']);
@@ -115,19 +115,19 @@ describe('attachments get', () => {
     expect(written).toBe(htmlContent);
   });
 
-  test('--output with unknown type: writes JSON fallback to disk', async () => {
+  test('--output with no known field: writes JSON fallback to disk', async () => {
     mockOAuthSuccess('https://pega.example.com');
     nock('https://pega.example.com')
       .get('/prweb/api/application/v2/attachments/ATTACH-X')
-      .reply(200, { type: 'Custom', someField: 'someValue' });
+      .reply(200, { someField: 'someValue' });
 
     captured = captureOutput();
     await AttachmentsGet.run(['ATTACH-X', '--output', '/tmp/custom.json']);
     const out = JSON.parse(captured.stdout.join(''));
-    expect(out.type).toBe('Custom');
+    expect(out.type).toBe('unknown');
     expect(out.path).toBe('/tmp/custom.json');
     const written = readMockFile('/tmp/custom.json');
-    expect(JSON.parse(written)).toMatchObject({ type: 'Custom', someField: 'someValue' });
+    expect(JSON.parse(written)).toMatchObject({ someField: 'someValue' });
   });
 
   test('URL-encodes the attachment id', async () => {
