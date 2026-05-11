@@ -46,6 +46,7 @@ describe('ai-agents list-conversations', () => {
       'MYAGENT', '--context-id', 'CTX', '--page-size', '20', '--page-index', '0',
     ]);
     expect(scope.isDone()).toBe(true);
+    expect(JSON.parse(captured.stdout.join(''))).toEqual({ conversations: [] });
   });
 
   test('URL-encodes agentID and contextID with special characters', async () => {
@@ -61,5 +62,6 @@ describe('ai-agents list-conversations', () => {
     captured = captureOutput();
     await AiAgentsListConversations.run([agentId, '--context-id', ctx]);
     expect(scope.isDone()).toBe(true);
+    expect(JSON.parse(captured.stdout.join(''))).toEqual({ conversations: [] });
   });
 });
