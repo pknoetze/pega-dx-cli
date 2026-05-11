@@ -30,7 +30,7 @@ Actions: `data list-actions`, `data get-action`, `data perform-action`.
 
 ### Notes
 
-- `attachments get` assumes the API returns content wrapped in JSON (Base64 for File, URL string for URL, HTML for Correspondence).
+- `attachments get --output`: real-Pega verification confirmed the response shape is `{"message":"<base64>"}` for files (no `type` field). The `--output` implementation detects content by field presence (`message` → Base64 decode, `url` → URL string, `content` → Correspondence HTML). Fixed and verified in 0.5.0.
 - `data update`/`data patch`/`data perform-action` assume eTag-required (matching case/assignment mutations); `runMutateWithEtag` errors loudly if the GET-parent omits `ETag`.
 - `data perform-action` body shape mirrors `cases perform-action` (`{content, pageInstructions, attachments}`).
 
