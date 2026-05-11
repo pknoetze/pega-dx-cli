@@ -31,7 +31,7 @@ Actions: `data list-actions`, `data get-action`, `data perform-action`.
 ### Notes
 
 - `attachments get` assumes the API returns content wrapped in JSON (Base64 for File, URL string for URL, HTML for Correspondence).
-- `data update`/`data patch` assume eTag-required (matching case/assignment mutations); `runMutateWithEtag` errors loudly if the GET-parent omits `ETag`.
+- `data update`/`data patch`/`data perform-action` assume eTag-required (matching case/assignment mutations); `runMutateWithEtag` errors loudly if the GET-parent omits `ETag`.
 - `data perform-action` body shape mirrors `cases perform-action` (`{content, pageInstructions, attachments}`).
 
 ## [0.4.0] - 2026-05-06

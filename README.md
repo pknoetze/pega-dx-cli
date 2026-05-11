@@ -474,7 +474,7 @@ pega data delete D_OrderHeader
 # List actions available on a data record
 pega data list-actions D_OrderHeader
 
-# Get a data-record action's view
+# Get a data-record action's view (POST — unlike cases get-action which is GET)
 pega data get-action D_OrderHeader --action ApproveOrder
 
 # Perform a data-record action
