@@ -57,7 +57,7 @@ describe('ai-agents dislike', () => {
     ).rejects.toThrow();
   });
 
-  test('URL-encodes all three path segments', async () => {
+  test('URL-encodes the agentID path segment', async () => {
     mockOAuthSuccess('https://pega.example.com');
     const agentId = 'MY AGENT';
     const path = `/prweb/api/application/v2/ai-agents/${encodeURIComponent(agentId)}/conversations/PXCONV-1/messages/MSG-1/dislike`;
