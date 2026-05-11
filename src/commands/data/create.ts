@@ -20,7 +20,7 @@ export default class DataCreate extends BaseCommand {
     const encId = encodeURIComponent(args.dataViewId);
     try {
       const body = await parseDataInput(flags.data, '--data');
-      await this.runPost(baseFlags, `/data/${encId}`, body);
+      await this.runPost(baseFlags, `/data/${encId}`, { data: body });
     } catch (err) {
       this.fail(err);
     }

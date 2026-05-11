@@ -43,14 +43,10 @@ afterEach(() => {
 });
 
 describe('data update', () => {
-  test('GETs eTag from data_views/{id} then PUTs to data/{id}', async () => {
+  test('PUTs directly to data/{id} with {data:{...}} - no eTag fetch', async () => {
     mockOAuthSuccess('https://pega.example.com');
-    mockOAuthSuccess('https://pega.example.com');
-    nock('https://pega.example.com')
-      .get('/prweb/api/application/v2/data_views/D_MyView')
-      .reply(200, { dataViewId: 'D_MyView' }, { ETag: 'etag-v1' });
-    const scope = nock('https://pega.example.com', { reqheaders: { 'if-match': 'etag-v1' } })
-      .put('/prweb/api/application/v2/data/D_MyView', { field: 'value' })
+    const scope = nock('https://pega.example.com')
+      .put('/prweb/api/application/v2/data/D_MyView', { data: { field: 'value' } })
       .reply(200, { updated: true });
 
     captured = captureOutput();
@@ -61,15 +57,11 @@ describe('data update', () => {
 
   test('URL-encodes the dataViewId', async () => {
     mockOAuthSuccess('https://pega.example.com');
-    mockOAuthSuccess('https://pega.example.com');
     const id = 'D_My View';
     const encoded = encodeURIComponent(id);
     expect(encoded).toContain('%20');
-    nock('https://pega.example.com')
-      .get(`/prweb/api/application/v2/data_views/${encoded}`)
-      .reply(200, { dataViewId: id }, { ETag: 'etag-enc' });
-    const scope = nock('https://pega.example.com', { reqheaders: { 'if-match': 'etag-enc' } })
-      .put(`/prweb/api/application/v2/data/${encoded}`, { field: 'value' })
+    const scope = nock('https://pega.example.com')
+      .put(`/prweb/api/application/v2/data/${encoded}`, { data: { field: 'value' } })
       .reply(200, { updated: true });
 
     captured = captureOutput();

@@ -31,7 +31,9 @@ Actions: `data list-actions`, `data get-action`, `data perform-action`.
 ### Notes
 
 - `attachments get --output`: real-Pega verification confirmed the response shape is `{"message":"<base64>"}` for files (no `type` field). The `--output` implementation detects content by field presence (`message` → Base64 decode, `url` → URL string, `content` → Correspondence HTML). Fixed and verified in 0.5.0.
-- `data update`/`data patch`/`data perform-action` assume eTag-required (matching case/assignment mutations); `runMutateWithEtag` errors loudly if the GET-parent omits `ETag`.
+- `data create` and `data update` wrap the user-supplied `--data` object in `{"data":{...}}` before sending, matching the official API body schema (p.595-597 of the DX API PDF).
+- `data update` uses direct PUT (no eTag), `data patch` uses direct PATCH (no eTag), `data perform-action` uses direct PATCH (no eTag). None of the `/data/{id}` CRUD endpoints use If-Match — confirmed from official Pega DX API PDF.
+- `data delete` accepts `--params` (JSON object) which is appended as a query string (e.g. `--params '{"AccountID":"123"}'` → `?AccountID=123`). The exact parameter name is data-view-specific.
 - `data perform-action` body shape mirrors `cases perform-action` (`{content, pageInstructions, attachments}`).
 
 ## [0.4.0] - 2026-05-06

@@ -44,17 +44,12 @@ afterEach(() => {
 });
 
 describe('data perform-action', () => {
-  test('GETs eTag from data_views/{id} then PATCHes data/{id}/actions/{aid}', async () => {
+  test('PATCHes /data/{id}/actions/{aid} directly - no eTag fetch', async () => {
     mockOAuthSuccess('https://pega.example.com');
-    mockOAuthSuccess('https://pega.example.com');
-    nock('https://pega.example.com')
-      .get('/prweb/api/application/v2/data_views/D_MyView')
-      .reply(200, { dataViewId: 'D_MyView' }, { ETag: '"etag-1"' });
     const scope = nock('https://pega.example.com')
       .patch('/prweb/api/application/v2/data/D_MyView/actions/myAction', {
         content: { field: 'value' },
       })
-      .matchHeader('If-Match', '"etag-1"')
       .reply(200, { ok: true });
 
     captured = captureOutput();
@@ -65,13 +60,8 @@ describe('data perform-action', () => {
 
   test('no flags → body = {} (PATCH still sent)', async () => {
     mockOAuthSuccess('https://pega.example.com');
-    mockOAuthSuccess('https://pega.example.com');
-    nock('https://pega.example.com')
-      .get('/prweb/api/application/v2/data_views/D_MyView')
-      .reply(200, { dataViewId: 'D_MyView' }, { ETag: '"etag-1"' });
     const scope = nock('https://pega.example.com')
       .patch('/prweb/api/application/v2/data/D_MyView/actions/myAction', {})
-      .matchHeader('If-Match', '"etag-1"')
       .reply(200, { ok: true });
 
     captured = captureOutput();
@@ -81,17 +71,12 @@ describe('data perform-action', () => {
 
   test('all three flags → body = {content, pageInstructions, attachments}', async () => {
     mockOAuthSuccess('https://pega.example.com');
-    mockOAuthSuccess('https://pega.example.com');
-    nock('https://pega.example.com')
-      .get('/prweb/api/application/v2/data_views/D_MyView')
-      .reply(200, { dataViewId: 'D_MyView' }, { ETag: '"etag-1"' });
     const scope = nock('https://pega.example.com')
       .patch('/prweb/api/application/v2/data/D_MyView/actions/myAction', {
         content: { field: 'value' },
         pageInstructions: [{ i: 'add' }],
         attachments: [{ type: 'File', ID: 'a' }],
       })
-      .matchHeader('If-Match', '"etag-1"')
       .reply(200, { ok: true });
 
     captured = captureOutput();
@@ -107,19 +92,14 @@ describe('data perform-action', () => {
 
   test('URL-encodes dataViewId and actionId', async () => {
     mockOAuthSuccess('https://pega.example.com');
-    mockOAuthSuccess('https://pega.example.com');
     const id = 'D_My View';
     const action = 'my Action';
     const encId = encodeURIComponent(id);
     const encAction = encodeURIComponent(action);
     expect(encId).toContain('%20');
     expect(encAction).toContain('%20');
-    nock('https://pega.example.com')
-      .get(`/prweb/api/application/v2/data_views/${encId}`)
-      .reply(200, { dataViewId: id }, { ETag: '"etag-enc"' });
     const scope = nock('https://pega.example.com')
       .patch(`/prweb/api/application/v2/data/${encId}/actions/${encAction}`, {})
-      .matchHeader('If-Match', '"etag-enc"')
       .reply(200, { ok: true });
 
     captured = captureOutput();

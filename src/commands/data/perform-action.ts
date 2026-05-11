@@ -34,12 +34,6 @@ export default class DataPerformAction extends BaseCommand {
     } catch (err) {
       this.fail(err);
     }
-    await this.runMutateWithEtag(
-      baseFlags,
-      'PATCH',
-      `/data_views/${encId}`,
-      `/data/${encId}/actions/${encAction}`,
-      body,
-    );
+    await this.runPatch(baseFlags, `/data/${encId}/actions/${encAction}`, body);
   }
 }

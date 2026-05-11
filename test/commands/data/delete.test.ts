@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import nock from 'nock';
 import { resetMockFs } from '../../helpers/mock-filesystem.js';
-import { captureOutput, type CapturedOutput } from '../../helpers/capture-output.js';
+import { captureOutput, parseFirstJson, type CapturedOutput } from '../../helpers/capture-output.js';
 import { mockOAuthSuccess, cleanupNock } from '../../helpers/mock-pega-api.js';
 
 jest.unstable_mockModule('node:fs', async () => {
@@ -43,7 +43,20 @@ afterEach(() => {
 });
 
 describe('data delete', () => {
-  test('DELETEs /data/{dataViewId}', async () => {
+  test('DELETEs /data/{dataViewId} with --params as query string', async () => {
+    mockOAuthSuccess('https://pega.example.com');
+    const scope = nock('https://pega.example.com')
+      .delete('/prweb/api/application/v2/data/D_MyView')
+      .query({ id: '101' })
+      .reply(200, { deleted: true });
+
+    captured = captureOutput();
+    await DataDelete.run(['D_MyView', '--params', '{"id":"101"}']);
+    expect(scope.isDone()).toBe(true);
+    expect(JSON.parse(captured.stdout.join(''))).toEqual({ deleted: true });
+  });
+
+  test('DELETEs /data/{dataViewId} without query params when --params omitted', async () => {
     mockOAuthSuccess('https://pega.example.com');
     const scope = nock('https://pega.example.com')
       .delete('/prweb/api/application/v2/data/D_MyView')
@@ -52,7 +65,6 @@ describe('data delete', () => {
     captured = captureOutput();
     await DataDelete.run(['D_MyView']);
     expect(scope.isDone()).toBe(true);
-    expect(JSON.parse(captured.stdout.join(''))).toEqual({ deleted: true });
   });
 
   test('URL-encodes the dataViewId', async () => {
@@ -69,7 +81,7 @@ describe('data delete', () => {
     expect(scope.isDone()).toBe(true);
   });
 
-  test('--dry-run emits DELETE method with correct URL and no network call', async () => {
+  test('--dry-run emits DELETE with URL and no network call', async () => {
     captured = captureOutput();
     await DataDelete.run(['D_MyView', '--dry-run']);
     const out = JSON.parse(captured.stdout.join(''));
@@ -77,5 +89,22 @@ describe('data delete', () => {
     expect(out.url).toBe(
       'https://pega.example.com/prweb/api/application/v2/data/D_MyView',
     );
+  });
+
+  test('--dry-run with --params includes query string in URL', async () => {
+    captured = captureOutput();
+    await DataDelete.run(['D_MyView', '--dry-run', '--params', '{"id":"101"}']);
+    const out = JSON.parse(captured.stdout.join(''));
+    expect(out.method).toBe('DELETE');
+    expect(out.url).toBe(
+      'https://pega.example.com/prweb/api/application/v2/data/D_MyView?id=101',
+    );
+  });
+
+  test('invalid --params JSON exits with INVALID_ARGS', async () => {
+    captured = captureOutput();
+    await expect(DataDelete.run(['D_MyView', '--params', '{bad'])).rejects.toThrow();
+    const err = parseFirstJson(captured.stderr) as Record<string, unknown>;
+    expect(err.code).toBe('INVALID_ARGS');
   });
 });

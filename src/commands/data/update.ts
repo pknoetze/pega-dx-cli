@@ -20,13 +20,7 @@ export default class DataUpdate extends BaseCommand {
     const encId = encodeURIComponent(args.dataViewId);
     try {
       const body = await parseDataInput(flags.data, '--data');
-      await this.runMutateWithEtag(
-        baseFlags,
-        'PUT',
-        `/data_views/${encId}`,
-        `/data/${encId}`,
-        body,
-      );
+      await this.runPut(baseFlags, `/data/${encId}`, { data: body });
     } catch (err) {
       this.fail(err);
     }

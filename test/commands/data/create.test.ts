@@ -43,10 +43,10 @@ afterEach(() => {
 });
 
 describe('data create', () => {
-  test('POSTs to /data/{dataViewId} with body', async () => {
+  test('POSTs to /data/{dataViewId} with body wrapped in {data:{...}}', async () => {
     mockOAuthSuccess('https://pega.example.com');
     const scope = nock('https://pega.example.com')
-      .post('/prweb/api/application/v2/data/D_MyView', { field: 'value' })
+      .post('/prweb/api/application/v2/data/D_MyView', { data: { field: 'value' } })
       .reply(201, { id: 'new-record' });
 
     captured = captureOutput();
@@ -61,7 +61,7 @@ describe('data create', () => {
     const encoded = encodeURIComponent(id);
     expect(encoded).toContain('%20');
     const scope = nock('https://pega.example.com')
-      .post(`/prweb/api/application/v2/data/${encoded}`, { field: 'value' })
+      .post(`/prweb/api/application/v2/data/${encoded}`, { data: { field: 'value' } })
       .reply(201, { id: 'enc-record' });
 
     captured = captureOutput();

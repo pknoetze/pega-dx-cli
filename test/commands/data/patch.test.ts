@@ -43,13 +43,9 @@ afterEach(() => {
 });
 
 describe('data patch', () => {
-  test('GETs eTag from data_views/{id} then PATCHes data/{id}', async () => {
+  test('PATCHes /data/{id} directly - no eTag fetch', async () => {
     mockOAuthSuccess('https://pega.example.com');
-    mockOAuthSuccess('https://pega.example.com');
-    nock('https://pega.example.com')
-      .get('/prweb/api/application/v2/data_views/D_MyView')
-      .reply(200, { dataViewId: 'D_MyView' }, { ETag: 'etag-v2' });
-    const scope = nock('https://pega.example.com', { reqheaders: { 'if-match': 'etag-v2' } })
+    const scope = nock('https://pega.example.com')
       .patch('/prweb/api/application/v2/data/D_MyView', { field: 'patched' })
       .reply(200, { patched: true });
 
@@ -61,14 +57,10 @@ describe('data patch', () => {
 
   test('URL-encodes the dataViewId', async () => {
     mockOAuthSuccess('https://pega.example.com');
-    mockOAuthSuccess('https://pega.example.com');
     const id = 'D_My View';
     const encoded = encodeURIComponent(id);
     expect(encoded).toContain('%20');
-    nock('https://pega.example.com')
-      .get(`/prweb/api/application/v2/data_views/${encoded}`)
-      .reply(200, { dataViewId: id }, { ETag: 'etag-enc' });
-    const scope = nock('https://pega.example.com', { reqheaders: { 'if-match': 'etag-enc' } })
+    const scope = nock('https://pega.example.com')
       .patch(`/prweb/api/application/v2/data/${encoded}`, { field: 'patched' })
       .reply(200, { patched: true });
 
