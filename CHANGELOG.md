@@ -2,6 +2,31 @@
 
 All notable changes to `pega-dx-cli` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-05-11
+
+### Added — `ai-agents` group (8 commands)
+- `ai-agents list` — GET /ai-agents
+- `ai-agents list-conversations <agentId> --context-id <ctx> [--page-size --page-index]`
+- `ai-agents start-conversation <agentId> [--context-id --interaction-id --execute-starter --active-channel --active-channel-id]`
+- `ai-agents get-conversation <agentId> --conversation <id>`
+- `ai-agents send-message <agentId> --conversation <id> --request <text> [--attachments --active-channel --active-channel-id]`
+- `ai-agents close-conversation <agentId> --conversation <id>`
+- `ai-agents like <agentId> --conversation <id> --message <msgId>`
+- `ai-agents dislike <agentId> --conversation <id> --message <msgId> --feedback <text>`
+
+### Added — `assistants` group (5 commands)
+- `assistants list-conversations <assistantId> --context-id <ctx> [--page-size --page-index]`
+- `assistants start-conversation <assistantId> [--context-id --interaction-id --execute-starter]`
+- `assistants get-conversation <assistantId> --conversation <id>`
+- `assistants send-message <assistantId> --conversation <id> --request <text>`
+- `assistants close-conversation <assistantId> --conversation <id>`
+
+### Changed
+- `BaseCommand.runPut` and `BaseCommand.runPatch` dry-run output now honours `body=undefined`: no `Content-Type: application/json` header and no `body` field emitted when the request carries no body. Live request path was already correct. Unblocks honest dry-run for the four no-body PUTs in this release.
+
+### Internal
+- Updated source-of-truth memory to put `dx-api.yaml` (OpenAPI 3 spec) at the top of the priority order. PDF and Swagger HTML drop to fallbacks.
+
 ## [0.5.0] - 2026-05-11
 
 ### Added — `attachments` group (6 commands)

@@ -74,7 +74,7 @@ pega cases get MYAPP-CASE-1
 
 ## Command reference
 
-The CLI is organized into 11 command groups: `auth`, `cases`, `assignments`, `case-types`, `documents`, `tags`, `followers`, `related`, `participants`, `attachments`, and `data`.
+The CLI is organized into 13 command groups: `auth`, `cases`, `assignments`, `case-types`, `documents`, `tags`, `followers`, `related`, `participants`, `attachments`, `data`, `ai-agents`, and `assistants`.
 
 | Command | Description | Example |
 |---|---|---|
@@ -153,6 +153,19 @@ The CLI is organized into 11 command groups: `auth`, `cases`, `assignments`, `ca
 | `pega data list-actions <id>` | List actions available on a data record | `pega data list-actions D_OrderHeader` |
 | `pega data get-action <id>` | Get a data-record action's view | `pega data get-action D_OrderHeader --action ApproveOrder` |
 | `pega data perform-action <id>` | Perform a data-record action | `pega data perform-action D_OrderHeader --action ApproveOrder --data '{"approver":"alice"}'` |
+| `pega ai-agents list` | List all AI agents enabled for external access | `pega ai-agents list` |
+| `pega ai-agents list-conversations <agentId> --context-id <ctx>` | List conversations for an agent | `pega ai-agents list-conversations MyAgent --context-id MYORG-WORK\!M-123` |
+| `pega ai-agents start-conversation <agentId>` | Start a new AI agent conversation | `pega ai-agents start-conversation MyAgent --context-id MYORG-WORK\!M-123` |
+| `pega ai-agents get-conversation <agentId> --conversation <id>` | Get details of a single conversation | `pega ai-agents get-conversation MyAgent --conversation PXCONV-1` |
+| `pega ai-agents send-message <agentId> --conversation <id> --request <text>` | Send a message in a conversation | `pega ai-agents send-message MyAgent --conversation PXCONV-1 --request "hello"` |
+| `pega ai-agents close-conversation <agentId> --conversation <id>` | Close a conversation | `pega ai-agents close-conversation MyAgent --conversation PXCONV-1` |
+| `pega ai-agents like <agentId> --conversation <id> --message <msgId>` | Like a message | `pega ai-agents like MyAgent --conversation PXCONV-1 --message MSG-1` |
+| `pega ai-agents dislike <agentId> --conversation <id> --message <msgId> --feedback <text>` | Dislike a message with feedback | `pega ai-agents dislike MyAgent --conversation PXCONV-1 --message MSG-1 --feedback "off topic"` |
+| `pega assistants list-conversations <assistantId> --context-id <ctx>` | List conversations for an assistant | `pega assistants list-conversations MyAssistant --context-id MYORG-WORK\!M-123` |
+| `pega assistants start-conversation <assistantId>` | Start a new assistant conversation | `pega assistants start-conversation MyAssistant --context-id MYORG-WORK\!M-123` |
+| `pega assistants get-conversation <assistantId> --conversation <id>` | Get details of a single conversation | `pega assistants get-conversation MyAssistant --conversation PXCONV-1` |
+| `pega assistants send-message <assistantId> --conversation <id> --request <text>` | Send a message in a conversation | `pega assistants send-message MyAssistant --conversation PXCONV-1 --request "hello"` |
+| `pega assistants close-conversation <assistantId> --conversation <id>` | Close a conversation | `pega assistants close-conversation MyAssistant --conversation PXCONV-1` |
 
 ## Cases
 
@@ -484,6 +497,63 @@ pega data perform-action D_OrderHeader --action ApproveOrder --data '{"approver"
 `data perform-action` accepts the same `--data`/`--page-instructions`/`--attachments` flags as `cases perform-action` and `assignments perform`.
 
 Run `pega data --help` for the full list of commands and flags.
+
+## ai-agents
+
+Conversational AI agents (AgentX). All commands require an authenticated profile.
+
+| Command | Description |
+|---|---|
+| `ai-agents list` | List all AI agents enabled for external access |
+| `ai-agents list-conversations <agentId> --context-id <ctx>` | List conversations for an agent |
+| `ai-agents start-conversation <agentId>` | Initiate a new conversation |
+| `ai-agents get-conversation <agentId> --conversation <id>` | Get a single conversation |
+| `ai-agents send-message <agentId> --conversation <id> --request <text>` | Send a message |
+| `ai-agents close-conversation <agentId> --conversation <id>` | Close a conversation |
+| `ai-agents like <agentId> --conversation <id> --message <msgId>` | Like a message |
+| `ai-agents dislike <agentId> --conversation <id> --message <msgId> --feedback <text>` | Dislike a message |
+
+### Example: full chat round trip
+
+```bash
+# Capture conversation ID
+CONV=$(pega ai-agents start-conversation MyAgent --context-id MYORG-WORK\!M-123 --format json | jq -r .ID)
+
+# Send a message
+pega ai-agents send-message MyAgent --conversation "$CONV" --request "What's my balance?"
+
+# Close when done
+pega ai-agents close-conversation MyAgent --conversation "$CONV"
+```
+
+### Notes
+
+- Field-name casing: API body uses `Request` (capital R) and `Attachments` (capital A) — the CLI shapes these for you from `--request` / `--attachments`.
+- `--attachments` follows the YAML element shape: `[{type, ID, category, name, attachmentFieldName, delete, pyRouteToWorkbasket}, ...]`.
+
+Run `pega ai-agents --help` for the full list of commands and flags.
+
+## assistants
+
+GenAI assistants. Smaller surface than `ai-agents` — no `activeChannel*` fields on start, no `Attachments` on send-message.
+
+| Command | Description |
+|---|---|
+| `assistants list-conversations <assistantId> --context-id <ctx>` | List conversations for an assistant |
+| `assistants start-conversation <assistantId>` | Initiate a new conversation |
+| `assistants get-conversation <assistantId> --conversation <id>` | Get a single conversation |
+| `assistants send-message <assistantId> --conversation <id> --request <text>` | Send a message |
+| `assistants close-conversation <assistantId> --conversation <id>` | Close a conversation |
+
+### Example
+
+```bash
+CONV=$(pega assistants start-conversation MyAssistant --context-id MYORG-WORK\!M-123 --format json | jq -r .ID)
+pega assistants send-message MyAssistant --conversation "$CONV" --request "Hello"
+pega assistants close-conversation MyAssistant --conversation "$CONV"
+```
+
+Run `pega assistants --help` for the full list of commands and flags.
 
 ## Global flags
 
