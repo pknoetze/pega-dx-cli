@@ -43,10 +43,11 @@ afterEach(() => {
 });
 
 describe('data list-pages', () => {
-  test('GETs /data_pages', async () => {
+  test('defaults to type=all: GETs /data_pages?type=all', async () => {
     mockOAuthSuccess('https://pega.example.com');
     const scope = nock('https://pega.example.com')
       .get('/prweb/api/application/v2/data_pages')
+      .query({ type: 'all' })
       .reply(200, { dataPages: [] });
 
     captured = captureOutput();
@@ -55,13 +56,26 @@ describe('data list-pages', () => {
     expect(JSON.parse(captured.stdout.join(''))).toEqual({ dataPages: [] });
   });
 
-  test('--dry-run emits GET method with correct URL and no network call', async () => {
+  test('--type explorable: GETs /data_pages?type=explorable', async () => {
+    mockOAuthSuccess('https://pega.example.com');
+    const scope = nock('https://pega.example.com')
+      .get('/prweb/api/application/v2/data_pages')
+      .query({ type: 'explorable' })
+      .reply(200, { dataPages: [{ name: 'D_Test' }] });
+
+    captured = captureOutput();
+    await DataListPages.run(['--type', 'explorable']);
+    expect(scope.isDone()).toBe(true);
+    expect(JSON.parse(captured.stdout.join(''))).toEqual({ dataPages: [{ name: 'D_Test' }] });
+  });
+
+  test('--dry-run emits GET method with type=all in URL', async () => {
     captured = captureOutput();
     await DataListPages.run(['--dry-run']);
     const out = JSON.parse(captured.stdout.join(''));
     expect(out.method).toBe('GET');
     expect(out.url).toBe(
-      'https://pega.example.com/prweb/api/application/v2/data_pages',
+      'https://pega.example.com/prweb/api/application/v2/data_pages?type=all',
     );
   });
 });
