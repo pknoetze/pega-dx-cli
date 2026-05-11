@@ -24,6 +24,7 @@ Actions: `data list-actions`, `data get-action`, `data perform-action`.
 
 - New: `PegaApiClient.uploadMultipart<T>(path, formData, opts?)` for multipart POSTs.
 - New: `BaseCommand.runPatch(flags, path, body, opts?)` — no-eTag PATCH wrapper, mirrors `runPost`.
+- New: `BaseCommand.runPut(flags, path, body, opts?)` — no-eTag PUT wrapper.
 - New: `composeDataQueryBody(flags, shape)` in `src/lib/input.ts`. Two shapes: `'query'` and `'count-or-metadata'`.
 - Changed: `BaseCommand.runPost` accepts an optional `RequestOpts` parameter (additive; existing callers unaffected). Used by the four `data` query commands to set `timeoutMs: EXTENDED_TIMEOUT_MS`.
 - New: `mockMultipartUpload` test helper in `test/helpers/mock-pega-api.ts`.
@@ -35,6 +36,8 @@ Actions: `data list-actions`, `data get-action`, `data perform-action`.
 - `data update` uses direct PUT (no eTag), `data patch` uses direct PATCH (no eTag), `data perform-action` uses direct PATCH (no eTag). None of the `/data/{id}` CRUD endpoints use If-Match — confirmed from official Pega DX API PDF.
 - `data delete` accepts `--params` (JSON object) which is appended as a query string (e.g. `--params '{"AccountID":"123"}'` → `?AccountID=123`). The exact parameter name is data-view-specific.
 - `data perform-action` body shape mirrors `cases perform-action` (`{content, pageInstructions, attachments}`).
+- `data list-pages` requires `--type all|explorable` (defaults to `all`). The `type` parameter is mandatory in the Pega API; `--type explorable` verified returning 57 pages on the demo instance.
+- Real-Pega verified against `D_AccountSavable` (class `Uplus-Core-Data-Account`): `data create` ✅ 200, `data update` ✅ 200, `data get-metadata` ✅ 200, `data query` (list view) ✅ 200. PATCH/DELETE return 422/400 on this demo instance — consistent with those save plan branches not being configured (Pega server-side limitation, not CLI bugs).
 
 ## [0.4.0] - 2026-05-06
 
