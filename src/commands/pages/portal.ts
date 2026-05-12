@@ -5,7 +5,7 @@ export default class PagesPortal extends BaseCommand {
   static override description = 'Get portal details by portal ID';
   static override examples = ['<%= config.bin %> pages portal MyPortal'];
   static override args = {
-    portalID: Args.string({ required: true, description: 'Portal name' }),
+    portalID: Args.string({ required: true, description: 'Portal ID' }),
   };
   static override flags = {};
 
