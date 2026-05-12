@@ -21,11 +21,11 @@ export default class PagesGetWithContext extends BaseCommand {
     const { args, flags } = await this.parse(PagesGetWithContext);
     const baseFlags = flags as unknown as BaseFlags;
     if (flags['data-context'].length === 0) {
-      this.fail({
+      throw {
         code: 'INVALID_ARGS',
         message: '--data-context must not be empty',
         httpStatus: 0,
-      } satisfies NormalizedError);
+      } satisfies NormalizedError;
     }
     const path = `/pages/${encodeURIComponent(args.pageID)}`;
     await this.runPost(baseFlags, path, { dataContext: flags['data-context'] });
