@@ -115,4 +115,16 @@ describe('ui-lists create-personalization', () => {
     await UiListsCreatePersonalization.run([listID, '--name', 'My View']);
     expect(scope.isDone()).toBe(true);
   });
+
+  test('404 emits structured error', async () => {
+    mockOAuthSuccess('https://pega.example.com');
+    nock('https://pega.example.com')
+      .post('/prweb/api/application/v2/ui_lists/MISSING/personalizations')
+      .reply(404, { localizedValue: 'List not found' });
+
+    captured = captureOutput();
+    await expect(UiListsCreatePersonalization.run(['MISSING', '--name', 'X'])).rejects.toThrow();
+    const err = parseFirstJson(captured.stderr) as Record<string, unknown>;
+    expect(err).toMatchObject({ error: true, code: 'NOT_FOUND', httpStatus: 404 });
+  });
 });
