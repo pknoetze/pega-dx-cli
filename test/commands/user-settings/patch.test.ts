@@ -1,6 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import nock from 'nock';
-import { vol } from 'memfs';
 import { resetMockFs, seedFile } from '../../helpers/mock-filesystem.js';
 import { captureOutput, parseFirstJson, type CapturedOutput } from '../../helpers/capture-output.js';
 import { mockOAuthSuccess, cleanupNock } from '../../helpers/mock-pega-api.js';
