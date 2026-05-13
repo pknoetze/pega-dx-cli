@@ -1,6 +1,6 @@
 {
   "name": "pega-dx-cli",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "CLI for Pega Infinity DX API V2 (Constellation)",
   "type": "module",
   "bin": {
@@ -39,6 +39,21 @@
       },
       "assignments": {
         "description": "Pega assignment operations (V2)"
+      },
+      "social": {
+        "description": "Pega Pulse social feed operations (V2)"
+      },
+      "recents": {
+        "description": "Pega recent items operations (V2)"
+      },
+      "ui-lists": {
+        "description": "Pega UI list operations (V2)"
+      },
+      "user-settings": {
+        "description": "Pega operator user settings (V2)"
+      },
+      "auth-profiles": {
+        "description": "Pega authentication profile operations (V2)"
       }
     }
   },

@@ -2,6 +2,47 @@
 
 All notable changes to `pega-dx-cli` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-05-13
+
+### Added — `social` group (14 commands)
+- `social get-feed <feedID> --filter-for <ctx>` — GET /feeds/{feedID}
+- `social list-mentions --mentions-type <type>` — GET /mentions
+- `social list-mention-types` — GET /mention_types
+- `social list-messages --filter-by <src> --filter-for <ctx>` — GET /messages
+- `social post-message --context <ctx> --message <text>` — POST /messages
+- `social get-message <messageID>` — GET /messages/{messageID}
+- `social update-message <messageID> --message <text>` — PUT /messages/{messageID}
+- `social delete-message <messageID>` — DELETE /messages/{messageID}
+- `social list-likes <messageID>` — GET /messages/{messageID}/likes
+- `social like-message <messageID>` — POST /messages/{messageID}/likes
+- `social unlike-message <messageID>` — DELETE /messages/{messageID}/likes
+- `social get-message-type <type>` — GET /message-types/{type}
+- `social list-suggested-tags` — GET /suggested_tags
+- `social search-tags` — GET /tags
+
+### Added — `recents` group (2 commands)
+- `recents list [--max-results <n>]` — GET /recents
+- `recents update --label <l> --id <id>` — PATCH /recents
+
+### Added — `ui-lists` group (5 commands)
+- `ui-lists move <viewName> --source-id <s> --destination-id <d>` — PATCH /ui_lists/{viewName}/move
+- `ui-lists list-personalizations <uiListID>` — GET /ui_lists/{uiListID}/personalizations
+- `ui-lists create-personalization <uiListID> --name <n>` — POST /ui_lists/{uiListID}/personalizations
+- `ui-lists update-personalization <uiListID> <personalizationID> --name <n>` — PUT /ui_lists/{uiListID}/personalizations/{personalizationID}
+- `ui-lists delete-personalization <uiListID> <personalizationID>` — DELETE /ui_lists/{uiListID}/personalizations/{personalizationID}
+
+### Added — `user-settings` group (2 commands)
+- `user-settings get` — GET /user_settings
+- `user-settings patch --data <json|@file|->` — PATCH /user_settings
+
+### Added — `auth-profiles` group (2 commands)
+- `auth-profiles get <authProfileName> [--gadget-id <id>]` — GET /authentication-profiles/{authProfileName}
+- `auth-profiles revoke-tokens <authProfileName> [--gadget-id <id>]` — DELETE /authentication-profiles/{authProfileName}/user-tokens
+
+### Added — existing groups (2 commands)
+- `auth refresh-b2s --token <token>` — POST /refreshB2S
+- `static-content profile-image <userId> [--output <path>]` — GET /users/{userId}/profile-image
+
 ## [0.6.0] - 2026-05-11
 
 ### Added — `ai-agents` group (8 commands)
