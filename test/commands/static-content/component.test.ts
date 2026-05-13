@@ -98,6 +98,15 @@ describe('static-content component', () => {
     expect(out.url).toBe('https://pega.example.com/prweb/api/application/v2/components/COMP-1');
   });
 
+  test('--dry-run with --output does not write file', async () => {
+    captured = captureOutput();
+    await StaticContentComponent.run(['COMP-1', '--output', '/tmp/comp.js', '--dry-run']);
+    const out = JSON.parse(captured.stdout.join(''));
+    expect(out.method).toBe('GET');
+    expect(out.url).toBe('https://pega.example.com/prweb/api/application/v2/components/COMP-1');
+    expect(() => readMockFile('/tmp/comp.js')).toThrow();
+  });
+
   test('404 emits structured error and exits 1', async () => {
     mockOAuthSuccess('https://pega.example.com');
     nock('https://pega.example.com')
