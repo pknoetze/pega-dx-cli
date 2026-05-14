@@ -1,3 +1,5 @@
+import inquirer from 'inquirer';
+
 export interface ActionSummary {
   id: string;
   label: string;
@@ -177,4 +179,83 @@ export function validateDateTime(value: string): true | string {
 
 export function isInteractiveTTY(): boolean {
   return Boolean(process.stdin.isTTY && process.stdout.isTTY);
+}
+
+// --- Prompt runner shim (swappable for tests) ---
+
+export type PromptRunner = (questions: ReadonlyArray<Record<string, unknown>>) => Promise<Record<string, unknown>>;
+
+const defaultRunner: PromptRunner = async (questions) =>
+  inquirer.prompt(questions as never, { output: process.stderr } as never) as Promise<Record<string, unknown>>;
+
+let activeRunner: PromptRunner = defaultRunner;
+
+export function setPromptRunner(runner: PromptRunner): void {
+  activeRunner = runner;
+}
+
+export function resetPromptRunner(): void {
+  activeRunner = defaultRunner;
+}
+
+function isExitPromptError(err: unknown): boolean {
+  return (
+    !!err &&
+    typeof err === 'object' &&
+    ((err as { name?: string }).name === 'ExitPromptError' ||
+      (err as { constructor?: { name?: string } }).constructor?.name === 'ExitPromptError')
+  );
+}
+
+const USER_CANCELLED = { code: 'USER_CANCELLED' as const };
+
+async function runOrCancel(questions: ReadonlyArray<Record<string, unknown>>): Promise<Record<string, unknown>> {
+  try {
+    return await activeRunner(questions);
+  } catch (err) {
+    if (isExitPromptError(err)) throw USER_CANCELLED;
+    throw err;
+  }
+}
+
+// --- pickAction ---
+
+export async function pickAction(actions: ActionSummary[]): Promise<string> {
+  const answers = await runOrCancel([
+    {
+      type: 'list',
+      name: 'action',
+      message: 'Select an action:',
+      choices: actions.map((a) => ({ name: a.label, value: a.id })),
+    },
+  ]);
+  return answers.action as string;
+}
+
+// --- promptFields ---
+
+function promptForField(f: FieldDef): Record<string, unknown> {
+  const base = { name: f.fieldId, message: `${f.label}:` };
+  if (f.type === 'boolean') return { ...base, type: 'confirm', default: false };
+  if (f.type === 'number') return { ...base, type: 'number', validate: validateNumber };
+  if (f.type === 'date') return { ...base, type: 'input', validate: validateDate };
+  if (f.type === 'datetime') return { ...base, type: 'input', validate: validateDateTime };
+  return { ...base, type: 'input', validate: validateRequiredText };
+}
+
+export async function promptFields(fields: FieldDef[]): Promise<Record<string, unknown>> {
+  if (fields.length === 0) return {};
+  const questions = fields.map(promptForField);
+  return runOrCancel(questions);
+}
+
+// --- confirmSubmit ---
+
+export async function confirmSubmit(body: unknown): Promise<boolean> {
+  process.stderr.write('\nAbout to submit:\n');
+  process.stderr.write(JSON.stringify(body, null, 2) + '\n');
+  const answers = await runOrCancel([
+    { type: 'confirm', name: 'confirmed', message: 'Submit?', default: false },
+  ]);
+  return Boolean(answers.confirmed);
 }

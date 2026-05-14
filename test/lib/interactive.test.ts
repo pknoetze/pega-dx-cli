@@ -7,6 +7,12 @@ import {
   validateRequiredText,
   validateNumber,
   isInteractiveTTY,
+  pickAction,
+  promptFields,
+  confirmSubmit,
+  setPromptRunner,
+  resetPromptRunner,
+  type PromptRunner,
 } from '../../src/lib/interactive.js';
 
 describe('extractActions', () => {
@@ -244,5 +250,89 @@ describe('isInteractiveTTY', () => {
     (process.stdin as { isTTY?: boolean }).isTTY = true;
     (process.stdout as { isTTY?: boolean }).isTTY = false;
     expect(isInteractiveTTY()).toBe(false);
+  });
+});
+
+describe('pickAction', () => {
+  afterEach(() => resetPromptRunner());
+
+  test('invokes runner with list question, returns chosen id', async () => {
+    const calls: Array<ReadonlyArray<Record<string, unknown>>> = [];
+    const runner: PromptRunner = async (questions) => {
+      calls.push(questions);
+      return { action: 'Submit' };
+    };
+    setPromptRunner(runner);
+
+    const id = await pickAction([
+      { id: 'Submit', label: 'Submit' },
+      { id: 'Cancel', label: 'Cancel' },
+    ]);
+    expect(id).toBe('Submit');
+    expect(calls).toHaveLength(1);
+    const q = calls[0]![0]!;
+    expect(q.type).toBe('list');
+    expect(q.name).toBe('action');
+    expect((q.choices as Array<{ value: string }>).map((c) => c.value)).toEqual(['Submit', 'Cancel']);
+  });
+
+  test('re-throws USER_CANCELLED on ExitPromptError', async () => {
+    setPromptRunner(async () => {
+      const err = new Error('cancelled') as Error & { name: string };
+      err.name = 'ExitPromptError';
+      throw err;
+    });
+    await expect(pickAction([{ id: 'Submit', label: 'Submit' }])).rejects.toMatchObject({
+      code: 'USER_CANCELLED',
+    });
+  });
+});
+
+describe('promptFields', () => {
+  afterEach(() => resetPromptRunner());
+
+  test('one question per field, returns answer record keyed by fieldId', async () => {
+    setPromptRunner(async () => ({ name: 'Alice', age: 30, agreed: true }));
+
+    const answers = await promptFields([
+      { fieldId: 'name', label: 'Name', type: 'text', required: true },
+      { fieldId: 'age', label: 'Age', type: 'number', required: true },
+      { fieldId: 'agreed', label: 'Agreed', type: 'boolean', required: true },
+    ]);
+    expect(answers).toEqual({ name: 'Alice', age: 30, agreed: true });
+  });
+
+  test('USER_CANCELLED on ExitPromptError', async () => {
+    setPromptRunner(async () => {
+      const err = new Error('cancelled') as Error & { name: string };
+      err.name = 'ExitPromptError';
+      throw err;
+    });
+    await expect(
+      promptFields([{ fieldId: 'x', label: 'X', type: 'text', required: true }]),
+    ).rejects.toMatchObject({ code: 'USER_CANCELLED' });
+  });
+});
+
+describe('confirmSubmit', () => {
+  afterEach(() => resetPromptRunner());
+
+  test('returns the boolean answer', async () => {
+    setPromptRunner(async () => ({ confirmed: true }));
+    expect(await confirmSubmit({ content: { name: 'Alice' } })).toBe(true);
+
+    setPromptRunner(async () => ({ confirmed: false }));
+    expect(await confirmSubmit({ content: { name: 'Alice' } })).toBe(false);
+  });
+
+  test('USER_CANCELLED on ExitPromptError', async () => {
+    setPromptRunner(async () => {
+      const err = new Error('cancelled') as Error & { name: string };
+      err.name = 'ExitPromptError';
+      throw err;
+    });
+    await expect(confirmSubmit({ content: {} })).rejects.toMatchObject({
+      code: 'USER_CANCELLED',
+    });
   });
 });
