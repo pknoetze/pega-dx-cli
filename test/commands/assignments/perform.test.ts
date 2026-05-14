@@ -379,4 +379,31 @@ describe('assignments perform — interactive wizard', () => {
       captured.restore();
     }
   });
+
+  test('Ctrl+C at prompt → exit 130, no structured-error JSON on stderr', async () => {
+    mockOAuthSuccess('https://pega.example.com');
+
+    nock('https://pega.example.com')
+      .get('/prweb/api/application/v2/assignments/ASSIGN-1')
+      .reply(
+        200,
+        { id: 'ASSIGN-1', actions: [{ ID: 'Submit', name: 'Submit' }] },
+        { ETag: '"e1"' },
+      );
+
+    setPromptRunner(async () => {
+      throw { code: 'USER_CANCELLED' };
+    });
+
+    const captured = captureOutput();
+    try {
+      await expect(
+        AssignmentsPerform.run(['ASSIGN-1', '--interactive']),
+      ).rejects.toMatchObject({ oclif: { exit: 130 } });
+      expect(captured.stderr.join('')).toContain('cancelled');
+      expect(() => parseFirstJson(captured.stderr)).toThrow();
+    } finally {
+      captured.restore();
+    }
+  });
 });

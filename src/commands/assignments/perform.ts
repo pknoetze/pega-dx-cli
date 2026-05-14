@@ -149,6 +149,7 @@ export default class AssignmentsPerform extends BaseCommand {
       if (err && typeof err === 'object' && (err as { code?: string }).code === 'USER_CANCELLED') {
         stderr('cancelled', { quiet: baseFlags.quiet });
         this.exit(130);
+        return;  // unreachable — this.exit throws — but makes branch termination explicit
       }
       this.fail(err);
     }
