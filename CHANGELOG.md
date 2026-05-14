@@ -2,6 +2,22 @@
 
 All notable changes to `pega-dx-cli` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-05-14
+
+### Added
+- `assignments perform --interactive` — TTY wizard that picks an action, prompts
+  for required fields, and confirms before submission. Stdout stays clean JSON;
+  all prompts and progress go to stderr. New runtime dependency: `inquirer`.
+
+### Documentation
+- README: new "Interactive mode" and "Piping & scripting" sections.
+
+### Internal
+- Phase 2 backlog (B-1 .. B-5) marked resolved in
+  `docs/superpowers/specs/phase-2-backlog.md`. All five items were addressed
+  in earlier phases; the backlog doc was simply not updated. See the doc for
+  evidence pointers (file:line references).
+
 ## [0.8.0] - 2026-05-13
 
 ### Added — `social` group (14 commands)
