@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, test, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import {
   extractActions,
   extractFields,
@@ -292,7 +292,12 @@ describe('promptFields', () => {
   afterEach(() => resetPromptRunner());
 
   test('one question per field, returns answer record keyed by fieldId', async () => {
-    setPromptRunner(async () => ({ name: 'Alice', age: 30, agreed: true }));
+    const capturedQuestions: Array<ReadonlyArray<Record<string, unknown>>> = [];
+    const runner: PromptRunner = async (questions) => {
+      capturedQuestions.push(questions);
+      return { name: 'Alice', age: 30, agreed: true };
+    };
+    setPromptRunner(runner);
 
     const answers = await promptFields([
       { fieldId: 'name', label: 'Name', type: 'text', required: true },
@@ -300,6 +305,11 @@ describe('promptFields', () => {
       { fieldId: 'agreed', label: 'Agreed', type: 'boolean', required: true },
     ]);
     expect(answers).toEqual({ name: 'Alice', age: 30, agreed: true });
+    expect(capturedQuestions).toHaveLength(1);
+    const qs = capturedQuestions[0]!;
+    expect(qs[0]).toMatchObject({ type: 'input', name: 'name' });
+    expect(qs[1]).toMatchObject({ type: 'number', name: 'age' });
+    expect(qs[2]).toMatchObject({ type: 'confirm', name: 'agreed' });
   });
 
   test('USER_CANCELLED on ExitPromptError', async () => {
@@ -317,9 +327,21 @@ describe('promptFields', () => {
 describe('confirmSubmit', () => {
   afterEach(() => resetPromptRunner());
 
-  test('returns the boolean answer', async () => {
-    setPromptRunner(async () => ({ confirmed: true }));
-    expect(await confirmSubmit({ content: { name: 'Alice' } })).toBe(true);
+  test('returns the boolean answer and writes body to stderr', async () => {
+    const stderrWrites: string[] = [];
+    const spy = jest.spyOn(process.stderr, 'write').mockImplementation((chunk: unknown) => {
+      stderrWrites.push(String(chunk));
+      return true;
+    });
+
+    try {
+      setPromptRunner(async () => ({ confirmed: true }));
+      const result = await confirmSubmit({ content: { name: 'Alice' } });
+      expect(result).toBe(true);
+      expect(stderrWrites.join('')).toContain('"name": "Alice"');
+    } finally {
+      spy.mockRestore();
+    }
 
     setPromptRunner(async () => ({ confirmed: false }));
     expect(await confirmSubmit({ content: { name: 'Alice' } })).toBe(false);

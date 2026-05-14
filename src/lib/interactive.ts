@@ -186,7 +186,7 @@ export function isInteractiveTTY(): boolean {
 export type PromptRunner = (questions: ReadonlyArray<Record<string, unknown>>) => Promise<Record<string, unknown>>;
 
 const defaultRunner: PromptRunner = async (questions) =>
-  inquirer.prompt(questions as never, { output: process.stderr } as never) as Promise<Record<string, unknown>>;
+  inquirer.createPromptModule({ output: process.stderr })(questions as never) as Promise<Record<string, unknown>>;
 
 let activeRunner: PromptRunner = defaultRunner;
 
