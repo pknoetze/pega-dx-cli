@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
 import nock from 'nock';
 import AssignmentsPerform from '../../../src/commands/assignments/perform.js';
 import { mockOAuthSuccess, cleanupNock } from '../../helpers/mock-pega-api.js';
-import { captureOutput } from '../../helpers/capture-output.js';
+import { captureOutput, parseFirstJson } from '../../helpers/capture-output.js';
 
 let origEmitWarning: typeof process.emitWarning;
 
@@ -62,6 +62,151 @@ describe('assignments perform', () => {
         '[]',
       ]);
       expect(scope.isDone()).toBe(true);
+    } finally {
+      captured.restore();
+    }
+  });
+});
+
+describe('assignments perform — --interactive flag', () => {
+  let origStdin: boolean | undefined;
+  let origStdout: boolean | undefined;
+  beforeEach(() => {
+    process.env.PEGA_BASE_URL = 'https://pega.example.com';
+    process.env.PEGA_CLIENT_ID = 'cid';
+    process.env.PEGA_CLIENT_SECRET = 'sec';
+    process.env.PEGA_NO_CACHE = 'true';
+    if (!nock.isActive()) nock.activate();
+    origStdin = process.stdin.isTTY;
+    origStdout = process.stdout.isTTY;
+    origEmitWarning = process.emitWarning;
+    process.emitWarning = (warning: string | Error, ...args: unknown[]) => {
+      const msg = typeof warning === 'string' ? warning : ((warning as { message?: string }).message ?? String(warning));
+      origEmitWarning.call(process, msg, ...(args as []));
+    };
+  });
+  afterEach(() => {
+    cleanupNock();
+    (process.stdin as { isTTY?: boolean }).isTTY = origStdin;
+    (process.stdout as { isTTY?: boolean }).isTTY = origStdout;
+    process.emitWarning = origEmitWarning;
+    delete process.env.PEGA_BASE_URL;
+    delete process.env.PEGA_CLIENT_ID;
+    delete process.env.PEGA_CLIENT_SECRET;
+    delete process.env.PEGA_NO_CACHE;
+  });
+
+  test('fall-through: stdin not a TTY → warning on stderr + non-interactive path runs', async () => {
+    (process.stdin as { isTTY?: boolean }).isTTY = false;
+    (process.stdout as { isTTY?: boolean }).isTTY = true;
+
+    mockOAuthSuccess('https://pega.example.com');
+    mockOAuthSuccess('https://pega.example.com');
+    nock('https://pega.example.com')
+      .get('/prweb/api/application/v2/assignments/ASSIGN-1')
+      .reply(200, { id: 'ASSIGN-1' }, { ETag: '"e1"' });
+    const scope = nock('https://pega.example.com', { reqheaders: { 'if-match': '"e1"' } })
+      .patch('/prweb/api/application/v2/assignments/ASSIGN-1/actions/Submit', { content: {} })
+      .reply(200, { ok: true });
+
+    const captured = captureOutput();
+    try {
+      await AssignmentsPerform.run([
+        'ASSIGN-1', '--interactive', '--action', 'Submit', '--data', '{}',
+      ]);
+      expect(captured.stderr.join('')).toContain('--interactive flag ignored: stdin is not a TTY');
+      expect(scope.isDone()).toBe(true);
+    } finally {
+      captured.restore();
+    }
+  });
+
+  test('TTY + --interactive + --action → INVALID_ARGS, exit 2, no network', async () => {
+    (process.stdin as { isTTY?: boolean }).isTTY = true;
+    (process.stdout as { isTTY?: boolean }).isTTY = true;
+
+    const captured = captureOutput();
+    try {
+      await expect(
+        AssignmentsPerform.run(['ASSIGN-1', '--interactive', '--action', 'Submit']),
+      ).rejects.toThrow();
+      const err = parseFirstJson(captured.stderr) as { code: string };
+      expect(err.code).toBe('INVALID_ARGS');
+    } finally {
+      captured.restore();
+    }
+  });
+
+  test('TTY + --interactive + --data → INVALID_ARGS', async () => {
+    (process.stdin as { isTTY?: boolean }).isTTY = true;
+    (process.stdout as { isTTY?: boolean }).isTTY = true;
+
+    const captured = captureOutput();
+    try {
+      await expect(
+        AssignmentsPerform.run(['ASSIGN-1', '--interactive', '--data', '{}']),
+      ).rejects.toThrow();
+      const err = parseFirstJson(captured.stderr) as { code: string };
+      expect(err.code).toBe('INVALID_ARGS');
+    } finally {
+      captured.restore();
+    }
+  });
+
+  test('TTY + --interactive + --page-instructions → INVALID_ARGS', async () => {
+    (process.stdin as { isTTY?: boolean }).isTTY = true;
+    (process.stdout as { isTTY?: boolean }).isTTY = true;
+
+    const captured = captureOutput();
+    try {
+      await expect(
+        AssignmentsPerform.run(['ASSIGN-1', '--interactive', '--page-instructions', '[]']),
+      ).rejects.toThrow();
+      const err = parseFirstJson(captured.stderr) as { code: string };
+      expect(err.code).toBe('INVALID_ARGS');
+    } finally {
+      captured.restore();
+    }
+  });
+
+  test('TTY + --interactive + --attachments → INVALID_ARGS', async () => {
+    (process.stdin as { isTTY?: boolean }).isTTY = true;
+    (process.stdout as { isTTY?: boolean }).isTTY = true;
+
+    const captured = captureOutput();
+    try {
+      await expect(
+        AssignmentsPerform.run(['ASSIGN-1', '--interactive', '--attachments', '[]']),
+      ).rejects.toThrow();
+      const err = parseFirstJson(captured.stderr) as { code: string };
+      expect(err.code).toBe('INVALID_ARGS');
+    } finally {
+      captured.restore();
+    }
+  });
+
+  test('TTY + --interactive + --dry-run → INVALID_ARGS', async () => {
+    (process.stdin as { isTTY?: boolean }).isTTY = true;
+    (process.stdout as { isTTY?: boolean }).isTTY = true;
+
+    const captured = captureOutput();
+    try {
+      await expect(
+        AssignmentsPerform.run(['ASSIGN-1', '--interactive', '--dry-run']),
+      ).rejects.toThrow();
+      const err = parseFirstJson(captured.stderr) as { code: string };
+      expect(err.code).toBe('INVALID_ARGS');
+    } finally {
+      captured.restore();
+    }
+  });
+
+  test('non-interactive without --action → INVALID_ARGS, exit 2', async () => {
+    const captured = captureOutput();
+    try {
+      await expect(AssignmentsPerform.run(['ASSIGN-1'])).rejects.toThrow();
+      const err = parseFirstJson(captured.stderr) as { code: string };
+      expect(err.code).toBe('INVALID_ARGS');
     } finally {
       captured.restore();
     }
