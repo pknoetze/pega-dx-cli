@@ -7,8 +7,6 @@ import {
   validateRequiredText,
   validateNumber,
   isInteractiveTTY,
-  type ActionSummary,
-  type FieldDef,
 } from '../../src/lib/interactive.js';
 
 describe('extractActions', () => {
