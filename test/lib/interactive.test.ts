@@ -1,0 +1,250 @@
+import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
+import {
+  extractActions,
+  extractFields,
+  validateDate,
+  validateDateTime,
+  validateRequiredText,
+  validateNumber,
+  isInteractiveTTY,
+  type ActionSummary,
+  type FieldDef,
+} from '../../src/lib/interactive.js';
+
+describe('extractActions', () => {
+  test('top-level actions[] shape', () => {
+    const r = { actions: [{ ID: 'Submit', name: 'Submit' }, { ID: 'Cancel', name: 'Cancel' }] };
+    expect(extractActions(r)).toEqual<ActionSummary[]>([
+      { id: 'Submit', label: 'Submit' },
+      { id: 'Cancel', label: 'Cancel' },
+    ]);
+  });
+
+  test('nested caseInfo.assignments[].actions[] shape', () => {
+    const r = {
+      data: {
+        caseInfo: {
+          assignments: [
+            { actions: [{ ID: 'A1', name: 'First' }] },
+            { actions: [{ ID: 'A2', name: 'Second' }] },
+          ],
+        },
+      },
+    };
+    expect(extractActions(r)).toEqual<ActionSummary[]>([
+      { id: 'A1', label: 'First' },
+      { id: 'A2', label: 'Second' },
+    ]);
+  });
+
+  test('dedupes by id, first wins', () => {
+    const r = {
+      data: {
+        caseInfo: {
+          assignments: [
+            { actions: [{ ID: 'A1', name: 'First' }] },
+            { actions: [{ ID: 'A1', name: 'Duplicate' }] },
+          ],
+        },
+      },
+    };
+    expect(extractActions(r)).toEqual<ActionSummary[]>([{ id: 'A1', label: 'First' }]);
+  });
+
+  test('label falls back to id when name missing', () => {
+    const r = { actions: [{ ID: 'Submit' }] };
+    expect(extractActions(r)).toEqual<ActionSummary[]>([{ id: 'Submit', label: 'Submit' }]);
+  });
+
+  test('unknown shape returns []', () => {
+    expect(extractActions({ noShape: true })).toEqual([]);
+    expect(extractActions(null)).toEqual([]);
+    expect(extractActions(undefined)).toEqual([]);
+  });
+});
+
+describe('extractFields — uiResources.resources.fields shape', () => {
+  test('maps text/integer/boolean required fields', () => {
+    const view = {
+      uiResources: {
+        resources: {
+          fields: {
+            firstName: { type: 'pxTextInput', label: 'First Name', required: true },
+            age: { type: 'pxInteger', label: 'Age', required: true },
+            agreed: { type: 'pxCheckbox', label: 'Agreed', required: true },
+          },
+        },
+      },
+    };
+    const fields = extractFields(view);
+    expect(fields).toEqual<FieldDef[]>([
+      { fieldId: 'firstName', label: 'First Name', type: 'text', required: true },
+      { fieldId: 'age', label: 'Age', type: 'number', required: true },
+      { fieldId: 'agreed', label: 'Agreed', type: 'boolean', required: true },
+    ]);
+  });
+
+  test('maps date/datetime fields', () => {
+    const view = {
+      uiResources: {
+        resources: {
+          fields: {
+            dob: { type: 'pxDate', label: 'DOB', required: true },
+            startAt: { type: 'pxDateTime', label: 'Start', required: true },
+          },
+        },
+      },
+    };
+    expect(extractFields(view)).toEqual<FieldDef[]>([
+      { fieldId: 'dob', label: 'DOB', type: 'date', required: true },
+      { fieldId: 'startAt', label: 'Start', type: 'datetime', required: true },
+    ]);
+  });
+
+  test('filters out optional fields', () => {
+    const view = {
+      uiResources: {
+        resources: {
+          fields: {
+            keep: { type: 'pxTextInput', label: 'Keep', required: true },
+            drop: { type: 'pxTextInput', label: 'Drop', required: false },
+          },
+        },
+      },
+    };
+    expect(extractFields(view)).toEqual<FieldDef[]>([
+      { fieldId: 'keep', label: 'Keep', type: 'text', required: true },
+    ]);
+  });
+
+  test('unknown type falls back to text with annotated label', () => {
+    const view = {
+      uiResources: {
+        resources: {
+          fields: {
+            status: { type: 'pxDropDown', label: 'Status', required: true },
+          },
+        },
+      },
+    };
+    expect(extractFields(view)).toEqual<FieldDef[]>([
+      { fieldId: 'status', label: 'Status (pxDropDown)', type: 'text', required: true },
+    ]);
+  });
+
+  test('label falls back to fieldId when missing', () => {
+    const view = {
+      uiResources: {
+        resources: { fields: { foo: { type: 'pxTextInput', required: true } } },
+      },
+    };
+    expect(extractFields(view)).toEqual<FieldDef[]>([
+      { fieldId: 'foo', label: 'foo', type: 'text', required: true },
+    ]);
+  });
+});
+
+describe('extractFields — uiResources.root.children[*] recursive shape', () => {
+  test('flattens nested layout to fields', () => {
+    const view = {
+      uiResources: {
+        root: {
+          children: [
+            {
+              type: 'Region',
+              children: [
+                { type: 'Field', fieldID: 'a', label: 'A', config: { type: 'pxTextInput', required: true } },
+                { type: 'Field', fieldID: 'b', label: 'B', config: { type: 'pxInteger', required: true } },
+              ],
+            },
+          ],
+        },
+      },
+    };
+    expect(extractFields(view)).toEqual<FieldDef[]>([
+      { fieldId: 'a', label: 'A', type: 'text', required: true },
+      { fieldId: 'b', label: 'B', type: 'number', required: true },
+    ]);
+  });
+
+  test('dedupes repeated fieldIds (first wins)', () => {
+    const view = {
+      uiResources: {
+        root: {
+          children: [
+            { type: 'Field', fieldID: 'x', label: 'First', config: { type: 'pxTextInput', required: true } },
+            { type: 'Field', fieldID: 'x', label: 'Second', config: { type: 'pxTextInput', required: true } },
+          ],
+        },
+      },
+    };
+    expect(extractFields(view)).toEqual<FieldDef[]>([
+      { fieldId: 'x', label: 'First', type: 'text', required: true },
+    ]);
+  });
+});
+
+describe('extractFields — unknown shape', () => {
+  test('returns []', () => {
+    expect(extractFields({})).toEqual([]);
+    expect(extractFields(null)).toEqual([]);
+    expect(extractFields({ uiResources: {} })).toEqual([]);
+  });
+});
+
+describe('validators', () => {
+  test('validateRequiredText: rejects empty/whitespace', () => {
+    expect(validateRequiredText('  ')).toBe('Value is required');
+    expect(validateRequiredText('')).toBe('Value is required');
+    expect(validateRequiredText('hello')).toBe(true);
+  });
+
+  test('validateNumber: rejects non-numeric', () => {
+    expect(validateNumber('abc')).toBe('Must be a number');
+    expect(validateNumber('')).toBe('Must be a number');
+    expect(validateNumber('42')).toBe(true);
+    expect(validateNumber('3.14')).toBe(true);
+  });
+
+  test('validateDate: accepts ISO date, rejects garbage', () => {
+    expect(validateDate('2026-05-14')).toBe(true);
+    expect(validateDate('not-a-date')).toBe('Must be a valid date');
+    expect(validateDate('')).toBe('Value is required');
+  });
+
+  test('validateDateTime: accepts ISO datetime, rejects garbage', () => {
+    expect(validateDateTime('2026-05-14T10:30:00Z')).toBe(true);
+    expect(validateDateTime('not-a-datetime')).toBe('Must be a valid date/time');
+  });
+});
+
+describe('isInteractiveTTY', () => {
+  let origStdin: boolean | undefined;
+  let origStdout: boolean | undefined;
+  beforeEach(() => {
+    origStdin = process.stdin.isTTY;
+    origStdout = process.stdout.isTTY;
+  });
+  afterEach(() => {
+    (process.stdin as { isTTY?: boolean }).isTTY = origStdin;
+    (process.stdout as { isTTY?: boolean }).isTTY = origStdout;
+  });
+
+  test('true only when both are TTYs', () => {
+    (process.stdin as { isTTY?: boolean }).isTTY = true;
+    (process.stdout as { isTTY?: boolean }).isTTY = true;
+    expect(isInteractiveTTY()).toBe(true);
+  });
+
+  test('false when stdin not TTY', () => {
+    (process.stdin as { isTTY?: boolean }).isTTY = false;
+    (process.stdout as { isTTY?: boolean }).isTTY = true;
+    expect(isInteractiveTTY()).toBe(false);
+  });
+
+  test('false when stdout not TTY', () => {
+    (process.stdin as { isTTY?: boolean }).isTTY = true;
+    (process.stdout as { isTTY?: boolean }).isTTY = false;
+    expect(isInteractiveTTY()).toBe(false);
+  });
+});
