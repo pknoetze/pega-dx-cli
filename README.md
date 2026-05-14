@@ -72,6 +72,50 @@ pega auth ping
 pega cases get MYAPP-CASE-1
 ```
 
+## Interactive mode
+
+The `assignments perform` command accepts a `--interactive` flag that walks you through performing an assignment action via prompts:
+
+```bash
+pega assignments perform ASSIGN-1 --interactive
+```
+
+The wizard:
+1. Fetches the assignment and lists its available actions.
+2. Lets you pick one.
+3. Fetches the action's view and prompts for each required field.
+4. Shows a summary and asks for confirmation before submitting.
+
+`--interactive` is mutually exclusive with `--action`, `--data`, `--page-instructions`, `--attachments`, and `--dry-run`. If stdin is not a TTY the flag is ignored (with a warning on stderr) and the existing non-interactive behavior runs unchanged.
+
+For fields whose type the wizard can't map automatically (dropdowns, picklists, page lists, etc.), the prompt label is annotated with the original Pega type and accepts a freeform value. If the action's view shape isn't recognized at all, the wizard exits with `INVALID_ARGS` and recommends `--data`.
+
+## Piping & scripting
+
+Every command prints structured JSON to stdout and progress/warnings to stderr. This makes `pega` safe to use in pipelines:
+
+```bash
+pega cases get CASE-1 | jq '.id'
+pega assignments perform ASSIGN-1 --action Submit --data @form.json > result.json
+```
+
+Even in interactive mode, the final PATCH response is the only thing written to stdout — all prompts, summaries, and progress messages go to stderr. So this works:
+
+```bash
+pega assignments perform ASSIGN-1 --interactive | jq
+```
+
+Use `--quiet` to suppress stderr progress messages. Inquirer prompts in interactive mode are not suppressed by `--quiet` — they're user input, not progress chatter.
+
+### Exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | success (including clean cancellation in interactive mode) |
+| 1 | API/network error (HTTP 4xx/5xx, timeout, network failure) |
+| 2 | invalid configuration or arguments |
+| 130 | interrupted (Ctrl+C in interactive mode) |
+
 ## Command reference
 
 The CLI is organized into 13 command groups: `auth`, `cases`, `assignments`, `case-types`, `documents`, `tags`, `followers`, `related`, `participants`, `attachments`, `data`, `ai-agents`, and `assistants`.
