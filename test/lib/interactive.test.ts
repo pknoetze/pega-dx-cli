@@ -14,7 +14,7 @@ import {
 describe('extractActions', () => {
   test('top-level actions[] shape', () => {
     const r = { actions: [{ ID: 'Submit', name: 'Submit' }, { ID: 'Cancel', name: 'Cancel' }] };
-    expect(extractActions(r)).toEqual<ActionSummary[]>([
+    expect(extractActions(r)).toEqual([
       { id: 'Submit', label: 'Submit' },
       { id: 'Cancel', label: 'Cancel' },
     ]);
@@ -31,7 +31,7 @@ describe('extractActions', () => {
         },
       },
     };
-    expect(extractActions(r)).toEqual<ActionSummary[]>([
+    expect(extractActions(r)).toEqual([
       { id: 'A1', label: 'First' },
       { id: 'A2', label: 'Second' },
     ]);
@@ -48,12 +48,12 @@ describe('extractActions', () => {
         },
       },
     };
-    expect(extractActions(r)).toEqual<ActionSummary[]>([{ id: 'A1', label: 'First' }]);
+    expect(extractActions(r)).toEqual([{ id: 'A1', label: 'First' }]);
   });
 
   test('label falls back to id when name missing', () => {
     const r = { actions: [{ ID: 'Submit' }] };
-    expect(extractActions(r)).toEqual<ActionSummary[]>([{ id: 'Submit', label: 'Submit' }]);
+    expect(extractActions(r)).toEqual([{ id: 'Submit', label: 'Submit' }]);
   });
 
   test('unknown shape returns []', () => {
@@ -77,7 +77,7 @@ describe('extractFields — uiResources.resources.fields shape', () => {
       },
     };
     const fields = extractFields(view);
-    expect(fields).toEqual<FieldDef[]>([
+    expect(fields).toEqual([
       { fieldId: 'firstName', label: 'First Name', type: 'text', required: true },
       { fieldId: 'age', label: 'Age', type: 'number', required: true },
       { fieldId: 'agreed', label: 'Agreed', type: 'boolean', required: true },
@@ -95,7 +95,7 @@ describe('extractFields — uiResources.resources.fields shape', () => {
         },
       },
     };
-    expect(extractFields(view)).toEqual<FieldDef[]>([
+    expect(extractFields(view)).toEqual([
       { fieldId: 'dob', label: 'DOB', type: 'date', required: true },
       { fieldId: 'startAt', label: 'Start', type: 'datetime', required: true },
     ]);
@@ -112,7 +112,7 @@ describe('extractFields — uiResources.resources.fields shape', () => {
         },
       },
     };
-    expect(extractFields(view)).toEqual<FieldDef[]>([
+    expect(extractFields(view)).toEqual([
       { fieldId: 'keep', label: 'Keep', type: 'text', required: true },
     ]);
   });
@@ -127,7 +127,7 @@ describe('extractFields — uiResources.resources.fields shape', () => {
         },
       },
     };
-    expect(extractFields(view)).toEqual<FieldDef[]>([
+    expect(extractFields(view)).toEqual([
       { fieldId: 'status', label: 'Status (pxDropDown)', type: 'text', required: true },
     ]);
   });
@@ -138,7 +138,7 @@ describe('extractFields — uiResources.resources.fields shape', () => {
         resources: { fields: { foo: { type: 'pxTextInput', required: true } } },
       },
     };
-    expect(extractFields(view)).toEqual<FieldDef[]>([
+    expect(extractFields(view)).toEqual([
       { fieldId: 'foo', label: 'foo', type: 'text', required: true },
     ]);
   });
@@ -161,7 +161,7 @@ describe('extractFields — uiResources.root.children[*] recursive shape', () =>
         },
       },
     };
-    expect(extractFields(view)).toEqual<FieldDef[]>([
+    expect(extractFields(view)).toEqual([
       { fieldId: 'a', label: 'A', type: 'text', required: true },
       { fieldId: 'b', label: 'B', type: 'number', required: true },
     ]);
@@ -178,7 +178,7 @@ describe('extractFields — uiResources.root.children[*] recursive shape', () =>
         },
       },
     };
-    expect(extractFields(view)).toEqual<FieldDef[]>([
+    expect(extractFields(view)).toEqual([
       { fieldId: 'x', label: 'First', type: 'text', required: true },
     ]);
   });
