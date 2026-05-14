@@ -1,7 +1,14 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { composeMutationBody, type MutationBodyFlags } from '../../lib/input.js';
-import { isInteractiveTTY } from '../../lib/interactive.js';
+import {
+  isInteractiveTTY,
+  extractActions,
+  extractFields,
+  pickAction,
+  promptFields,
+  confirmSubmit,
+} from '../../lib/interactive.js';
 import { stderr } from '../../lib/output.js';
 import type { NormalizedError } from '../../lib/errors.js';
 
@@ -81,8 +88,69 @@ export default class AssignmentsPerform extends BaseCommand {
     );
   }
 
-  // Wizard implementation lands in Task 5.
-  protected async runInteractive(_assignmentId: string, _baseFlags: BaseFlags): Promise<void> {
-    this.fail(invalidArgs('Interactive wizard not yet implemented'));
+  protected async runInteractive(assignmentId: string, baseFlags: BaseFlags): Promise<void> {
+    const encId = encodeURIComponent(assignmentId);
+    try {
+      const client = await this.getClient(baseFlags);
+
+      // GET parent assignment + eTag
+      const parent = await client.getWithMeta<unknown>(`/assignments/${encId}`);
+      const eTag = parent.eTag;
+      if (!eTag) {
+        throw {
+          code: 'MISSING_ETAG',
+          message: `Parent resource /assignments/${encId} did not include an ETag header`,
+          httpStatus: parent.status,
+        } satisfies NormalizedError;
+      }
+
+      // Pick action
+      const actions = extractActions(parent.data);
+      if (actions.length === 0) {
+        throw {
+          code: 'INVALID_ARGS',
+          message: `no available actions found for assignment '${assignmentId}'`,
+          httpStatus: 0,
+        } satisfies NormalizedError;
+      }
+      const actionId = await pickAction(actions);
+      const encAction = encodeURIComponent(actionId);
+
+      // GET action view + extract fields
+      const view = await client.get<unknown>(`/assignments/${encId}/actions/${encAction}`);
+      const fields = extractFields(view);
+      if (fields.length === 0) {
+        throw {
+          code: 'INVALID_ARGS',
+          message: `could not auto-detect required fields for action '${actionId}' — use --data instead`,
+          httpStatus: 0,
+        } satisfies NormalizedError;
+      }
+
+      // Prompt fields
+      const answers = await promptFields(fields);
+      const body = { content: answers };
+
+      // Confirm
+      const confirmed = await confirmSubmit(body);
+      if (!confirmed) {
+        stderr('cancelled', { quiet: baseFlags.quiet });
+        return;
+      }
+
+      // Submit
+      const result = await client.patch<unknown>(
+        `/assignments/${encId}/actions/${encAction}`,
+        body,
+        { extraHeaders: { 'If-Match': eTag } },
+      );
+      this.emit(result, baseFlags);
+    } catch (err) {
+      if (err && typeof err === 'object' && (err as { code?: string }).code === 'USER_CANCELLED') {
+        stderr('cancelled', { quiet: baseFlags.quiet });
+        this.exit(130);
+      }
+      this.fail(err);
+    }
   }
 }
