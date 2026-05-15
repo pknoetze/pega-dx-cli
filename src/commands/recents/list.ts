@@ -1,6 +1,11 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/recents',
+  method: 'GET',
+} as const;
+
 export default class RecentsList extends BaseCommand {
   static override description = "List the operator's recent items";
   static override examples = [

@@ -1,6 +1,11 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/recents',
+  method: 'PATCH',
+} as const;
+
 export default class RecentsUpdate extends BaseCommand {
   static override description = 'Add or update a recent item';
   static override examples = ['<%= config.bin %> recents update --label "My Case" --id MYORG-WORK\\!M-1'];
