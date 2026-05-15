@@ -26,6 +26,7 @@ export function extractSpecOperations(yamlPath: string): SpecOperation[] {
   for (const [p, methods] of Object.entries(doc.paths ?? {})) {
     for (const [verb, op] of Object.entries(methods)) {
       if (!VERBS.has(verb.toLowerCase())) continue;
+      if (!op) continue;
       ops.push({
         path: p,
         method: verb.toUpperCase(),
