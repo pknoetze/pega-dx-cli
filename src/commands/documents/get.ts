@@ -1,6 +1,11 @@
 import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/documents/{documentID}',
+  method: 'GET',
+} as const;
+
 export default class DocumentsGet extends BaseCommand {
   static override description = 'Get metadata for a specific document';
   static override examples = ['<%= config.bin %> documents get DOC-1'];

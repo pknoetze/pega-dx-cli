@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}/documents/{documentID}',
+  method: 'DELETE',
+} as const;
+
 export default class DocumentsDelete extends BaseCommand {
   static override description = 'Remove a document linked to a case';
   static override examples = [
