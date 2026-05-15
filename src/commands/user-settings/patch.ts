@@ -2,6 +2,11 @@ import { Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { parseDataInput } from '../../lib/input.js';
 
+export const __endpoint = {
+  path: '/user_settings',
+  method: 'PATCH',
+} as const;
+
 export default class UserSettingsPatch extends BaseCommand {
   static override description = 'Patch operator user settings';
   static override examples = [

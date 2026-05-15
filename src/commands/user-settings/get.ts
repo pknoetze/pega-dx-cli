@@ -1,5 +1,10 @@
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/user_settings',
+  method: 'GET',
+} as const;
+
 export default class UserSettingsGet extends BaseCommand {
   static override description = 'Get operator user settings';
   static override examples = ['<%= config.bin %> user-settings get'];
