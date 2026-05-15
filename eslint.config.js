@@ -23,6 +23,19 @@ export default [
     languageOptions: {
       parser: tsparser,
       parserOptions: { project: './tsconfig.test.json' },
+      globals: { ...globals.node, ...globals.jest },
+    },
+    plugins: { '@typescript-eslint': tseslint },
+    rules: {
+      ...tseslint.configs.recommended.rules,
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    },
+  },
+  {
+    files: ['scripts/**/*.ts'],
+    languageOptions: {
+      parser: tsparser,
+      parserOptions: { project: './tsconfig.test.json' },
       globals: globals.node,
     },
     plugins: { '@typescript-eslint': tseslint },
@@ -31,5 +44,5 @@ export default [
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
-  { ignores: ['dist/', 'node_modules/', 'bin/', '*.config.js', '*.config.ts'] },
+  { ignores: ['dist/', 'tmp/', 'node_modules/', 'bin/', '*.config.js', '*.config.ts'] },
 ];
