@@ -1,7 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import yaml from 'js-yaml';
 import {
   extractSpecOperations,
   extractCommandEndpoints,
@@ -22,7 +21,7 @@ export function runAudit(opts: {
   commandsRoot: string;
   outputPath: string;
 }): AuditResult {
-  const spec = extractSpecOperations(opts.specPath);
+  const { version, operations: spec } = extractSpecOperations(opts.specPath);
   const cmds = extractCommandEndpoints(opts.commandsRoot);
 
   const specKey = (o: { path: string; method: string }) => `${o.method} ${o.path}`;
@@ -45,17 +44,11 @@ export function runAudit(opts: {
   }
   const ok = spec.length - missing.length;
 
-  const version = readSpecVersion(opts.specPath);
   const md = renderCoverageDoc({ version, spec, cmds: cmdSet, missing, drift, cliOnly });
   fs.mkdirSync(path.dirname(opts.outputPath), { recursive: true });
   fs.writeFileSync(opts.outputPath, md);
 
   return { ok, missing, drift, cliOnly, exitCode: missing.length + drift.length === 0 ? 0 : 1 };
-}
-
-function readSpecVersion(specPath: string): string {
-  const doc = yaml.load(fs.readFileSync(specPath, 'utf8')) as { info?: { version?: string } };
-  return doc.info?.version ?? 'unknown';
 }
 
 function renderCoverageDoc(args: {

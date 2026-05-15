@@ -20,6 +20,8 @@ describe('extractSpecOperations', () => {
   it('returns one entry per (path, verb) pair, verb uppercased', () => {
     vol.fromJSON({
       '/spec.yaml': [
+        'info:',
+        '  version: 1.0.0',
         'paths:',
         '  /cases/{caseID}:',
         '    get: { operationId: getCase, summary: Get case }',
@@ -29,15 +31,16 @@ describe('extractSpecOperations', () => {
       ].join('\n'),
     });
 
-    const ops = extractSpecOperations('/spec.yaml');
-    expect(ops).toEqual(
+    const result = extractSpecOperations('/spec.yaml');
+    expect(result.version).toBe('1.0.0');
+    expect(result.operations).toEqual(
       expect.arrayContaining([
         { path: '/cases/{caseID}', method: 'GET', operationId: 'getCase', summary: 'Get case' },
         { path: '/cases/{caseID}', method: 'DELETE', operationId: 'deleteCase', summary: undefined },
         { path: '/cases', method: 'POST', operationId: 'createCase', summary: undefined },
       ])
     );
-    expect(ops).toHaveLength(3);
+    expect(result.operations).toHaveLength(3);
   });
 
   it('ignores non-verb keys (parameters, summary on the path)', () => {
@@ -50,7 +53,9 @@ describe('extractSpecOperations', () => {
         '    get: { operationId: x }',
       ].join('\n'),
     });
-    expect(extractSpecOperations('/spec.yaml')).toEqual([
+    const result = extractSpecOperations('/spec.yaml');
+    expect(result.version).toBe('unknown');
+    expect(result.operations).toEqual([
       { path: '/x', method: 'GET', operationId: 'x', summary: undefined },
     ]);
   });

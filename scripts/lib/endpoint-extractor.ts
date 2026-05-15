@@ -16,10 +16,16 @@ export interface CommandEndpoint {
   method: string | null;
 }
 
+export interface SpecDocument {
+  version: string;
+  operations: SpecOperation[];
+}
+
 const VERBS = new Set(['get', 'post', 'put', 'patch', 'delete']);
 
-export function extractSpecOperations(yamlPath: string): SpecOperation[] {
+export function extractSpecOperations(yamlPath: string): SpecDocument {
   const doc = yaml.load(fs.readFileSync(yamlPath, 'utf8')) as {
+    info?: { version?: string };
     paths?: Record<string, Record<string, { operationId?: string; summary?: string }>>;
   };
   const ops: SpecOperation[] = [];
@@ -35,7 +41,7 @@ export function extractSpecOperations(yamlPath: string): SpecOperation[] {
       });
     }
   }
-  return ops;
+  return { version: doc.info?.version ?? 'unknown', operations: ops };
 }
 
 export function extractCommandEndpoints(commandsRoot: string): CommandEndpoint[] {
