@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}/tags/{tagID}',
+  method: 'DELETE',
+} as const;
+
 export default class TagsDelete extends BaseCommand {
   static override description = 'Remove a tag from a case';
   static override examples = ['<%= config.bin %> tags delete MYAPP-CASE-1 --tag urgent'];

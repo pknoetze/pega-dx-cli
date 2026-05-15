@@ -1,6 +1,11 @@
 import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}/tags',
+  method: 'GET',
+} as const;
+
 export default class TagsList extends BaseCommand {
   static override description = 'List all tags on a case';
   static override examples = ['<%= config.bin %> tags list MYAPP-CASE-1'];
