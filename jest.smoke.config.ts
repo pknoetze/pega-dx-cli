@@ -3,8 +3,8 @@ import type { Config } from 'jest';
 const config: Config = {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
-  roots: ['<rootDir>/test'],
-  testMatch: ['**/*.test.ts'],
+  testMatch: ['**/test/smoke/**/*.smoke.ts'],
+  testTimeout: 60000,
   extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
@@ -12,9 +12,6 @@ const config: Config = {
   transform: {
     '^.+\\.ts$': ['ts-jest', { useESM: true, tsconfig: 'tsconfig.test.json' }],
   },
-  testPathIgnorePatterns: ['/node_modules/', '/test/smoke/'],
-  clearMocks: true,
-  setupFilesAfterEnv: [],
 };
 
 export default config;
