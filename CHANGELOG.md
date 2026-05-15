@@ -2,6 +2,29 @@
 
 All notable changes to `pega-dx-cli` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-05-15
+
+### Added — full v25.1.2 coverage
+
+- Every operation in `dx-api.yaml` (Pega DX API v25.1.2) now has a CLI command.
+  See [reference/api-coverage.md](reference/api-coverage.md) for the full mapping.
+- `scripts/audit-endpoints.ts` — re-runnable audit tool (`npm run audit:endpoints`)
+  that emits the coverage matrix and exits non-zero on any gap or drift.
+- `scripts/check-examples.ts` — enforces ≥1 `static example` per command.
+- `test/smoke/` — live-instance smoke harness (`npm run smoke`), one suite per
+  oclif topic. Uses `execa` to run the CLI as a subprocess and asserts on
+  stdout JSON + exit code. Hybrid bootstrap (create-then-delete) keeps suites
+  idempotent.
+
+### Changed
+
+- Every command now exports an `__endpoint` constant declaring its spec source.
+
+### CI
+
+- `.github/workflows/ci.yml` runs lint, build, tests, audit, and example-check
+  on every PR. Smoke tests stay a local pre-tag maintainer check.
+
 ## [0.9.0] - 2026-05-14
 
 ### Added
