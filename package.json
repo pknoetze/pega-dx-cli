@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "CLI for Pega Infinity DX API V2 (Constellation)",
   "homepage": "https://pknoetze.github.io/pega-dx-cli/",
+  "packageManager": "npm@11.5.2",
   "type": "module",
   "bin": {
     "pega": "./bin/run.js"
