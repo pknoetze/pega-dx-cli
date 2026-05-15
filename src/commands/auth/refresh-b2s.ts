@@ -1,6 +1,11 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/refreshB2S',
+  method: 'POST',
+} as const;
+
 export default class AuthRefreshB2S extends BaseCommand {
   static override description = 'Refresh a B2S authentication token';
   static override examples = [
