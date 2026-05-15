@@ -29,7 +29,7 @@
     "prepare": "if [ -x node_modules/.bin/tsc ]; then npm run build && oclif manifest; fi",
     "prepack": "npm run clean && npm run build && oclif manifest",
     "pack:local": "npm run build && oclif pack tarballs --targets=$(node -e \"console.log(process.platform+'-'+process.arch)\")",
-    "docs:generate": "ts-node scripts/generate-docs-site.ts",
+    "docs:generate": "node --loader ts-node/esm scripts/generate-docs-site.ts",
     "docs:dev": "vitepress dev site",
     "docs:build": "npm run docs:generate && vitepress build site"
   },
