@@ -44,5 +44,5 @@ export default [
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
-  { ignores: ['dist/', 'tmp/', 'node_modules/', 'bin/', '*.config.js', '*.config.ts'] },
+  { ignores: ['dist/', 'tmp/', 'site/', 'node_modules/', 'bin/', '*.config.js', '*.config.ts'] },
 ];
