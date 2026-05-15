@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/assistants/{assistantID}/conversations/{conversationID}',
+  method: 'GET',
+} as const;
+
 export default class AssistantsGetConversation extends BaseCommand {
   static override description = 'Get details of a single GenAI assistant conversation';
   static override examples = ['<%= config.bin %> assistants get-conversation MYASSISTANT --conversation PXCONV-503025'];

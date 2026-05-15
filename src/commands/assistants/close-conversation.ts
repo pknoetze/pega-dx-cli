@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/assistants/{assistantID}/conversations/{conversationID}/close',
+  method: 'PUT',
+} as const;
+
 export default class AssistantsCloseConversation extends BaseCommand {
   static override description = 'Close a GenAI assistant conversation';
   static override examples = ['<%= config.bin %> assistants close-conversation MYASSISTANT --conversation PXCONV-1'];

@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/assistants/{assistantID}/conversations',
+  method: 'GET',
+} as const;
+
 export default class AssistantsListConversations extends BaseCommand {
   static override description = 'List conversations for a GenAI assistant';
   static override examples = [
