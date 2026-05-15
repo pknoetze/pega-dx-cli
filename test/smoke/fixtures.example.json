@@ -1,0 +1,18 @@
+{
+  "$comment": "Copy this file to test/smoke/fixtures.json and fill values from your Pega instance. The smoke runner reads fixtures.json (gitignored); the .example.json is checked in.",
+  "caseTypeID": "MYORG-MYAPP-Work-Demo",
+  "agentID": "REPLACE_WITH_AGENT_ID",
+  "assistantID": "REPLACE_WITH_ASSISTANT_ID",
+  "portalID": "REPLACE_WITH_PORTAL_ID",
+  "channelID": "REPLACE_WITH_CHANNEL_ID",
+  "dashboardID": "REPLACE_WITH_DASHBOARD_ID",
+  "insightID": "REPLACE_WITH_INSIGHT_ID",
+  "pageID": "REPLACE_WITH_PAGE_ID",
+  "componentID": "REPLACE_WITH_COMPONENT_ID",
+  "fileID": "REPLACE_WITH_FILE_ID",
+  "data_view_ID": "REPLACE_WITH_DATA_VIEW_ID",
+  "feedID": "REPLACE_WITH_FEED_ID",
+  "messageID": "REPLACE_WITH_MESSAGE_ID",
+  "locale": "en_US",
+  "skip": []
+}

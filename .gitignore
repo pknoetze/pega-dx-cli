@@ -8,3 +8,6 @@ coverage/
 tsconfig.tsbuildinfo
 docs/
 .worktrees/
+
+# Smoke-test instance-specific fixtures (template lives at test/smoke/fixtures.example.json)
+test/smoke/fixtures.json
