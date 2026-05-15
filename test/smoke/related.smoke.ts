@@ -17,13 +17,13 @@ const SKIP = fx.skip.includes('related');
   });
 
   it('related list lists related cases', async () => {
-    if (!caseIdA) return;
+    if (!caseIdA) throw new Error('precondition: case bootstrap must succeed first');
     const res = await runCli(['related', 'list', caseIdA]);
     expect(res.exitCode).toBe(0);
   });
 
   it('related add links two cases together', async () => {
-    if (!caseIdA || !caseIdB) return;
+    if (!caseIdA || !caseIdB) throw new Error('precondition: case bootstrap must succeed first');
     const res = await runCli([
       'related', 'add', caseIdA,
       '--related-case-id', caseIdB,
@@ -33,7 +33,7 @@ const SKIP = fx.skip.includes('related');
   });
 
   it('related delete unlinks two cases', async () => {
-    if (!caseIdA || !caseIdB) return;
+    if (!caseIdA || !caseIdB) throw new Error('precondition: case bootstrap must succeed first');
     const res = await runCli([
       'related', 'delete', caseIdA,
       '--related-case-id', caseIdB,

@@ -16,7 +16,7 @@ const SKIP = fx.skip.includes('participants');
   });
 
   it('participants list-roles lists available roles', async () => {
-    if (!caseId) return;
+    if (!caseId) throw new Error('precondition: case bootstrap must succeed first');
     const res = await runCli(['participants', 'list-roles', caseId]);
     expect(res.exitCode).toBe(0);
     const parsed = JSON.parse(res.stdout);
@@ -28,7 +28,7 @@ const SKIP = fx.skip.includes('participants');
   });
 
   it('participants list lists participants on a case', async () => {
-    if (!caseId) return;
+    if (!caseId) throw new Error('precondition: case bootstrap must succeed first');
     const res = await runCli(['participants', 'list', caseId]);
     expect(res.exitCode).toBe(0);
     const parsed = JSON.parse(res.stdout);
@@ -40,7 +40,7 @@ const SKIP = fx.skip.includes('participants');
   });
 
   it('participants get-role returns participants for a role', async () => {
-    if (!caseId || !roleId) return;
+    if (!caseId || !roleId) throw new Error('precondition: case bootstrap and list-roles must succeed first');
     const res = await runCli([
       'participants', 'get-role', caseId,
       '--role-id', roleId,
@@ -49,7 +49,7 @@ const SKIP = fx.skip.includes('participants');
   });
 
   it('participants add adds a participant', async () => {
-    if (!caseId || !roleId) return;
+    if (!caseId || !roleId) throw new Error('precondition: case bootstrap and list-roles must succeed first');
     const data = JSON.stringify({
       pyFirstName: 'Smoke',
       pyLastName: 'Test',
@@ -66,7 +66,7 @@ const SKIP = fx.skip.includes('participants');
   });
 
   it('participants get returns a participant', async () => {
-    if (!caseId || !participantId) return;
+    if (!caseId || !participantId) throw new Error('precondition: participants list or add must succeed first');
     const res = await runCli([
       'participants', 'get', caseId,
       '--participant-id', participantId,
@@ -75,7 +75,7 @@ const SKIP = fx.skip.includes('participants');
   });
 
   it('participants update updates a participant', async () => {
-    if (!caseId || !participantId) return;
+    if (!caseId || !participantId) throw new Error('precondition: participants list or add must succeed first');
     const data = JSON.stringify({ pyFirstName: 'SmokeUpdated' });
     const res = await runCli([
       'participants', 'update', caseId,
@@ -86,7 +86,7 @@ const SKIP = fx.skip.includes('participants');
   });
 
   it('participants delete removes a participant', async () => {
-    if (!caseId || !participantId) return;
+    if (!caseId || !participantId) throw new Error('precondition: participants list or add must succeed first');
     const res = await runCli([
       'participants', 'delete', caseId,
       '--participant-id', participantId,

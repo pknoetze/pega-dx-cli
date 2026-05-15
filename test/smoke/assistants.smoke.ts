@@ -23,7 +23,7 @@ const SKIP = fx.skip.includes('assistants');
   });
 
   it('assistants get-conversation returns conversation', async () => {
-    if (!conversationID) return;
+    if (!conversationID) throw new Error('precondition: start-conversation must succeed first');
     const res = await runCli([
       'assistants', 'get-conversation', fx.assistantID,
       '--conversation', conversationID,
@@ -32,7 +32,7 @@ const SKIP = fx.skip.includes('assistants');
   });
 
   it('assistants send-message sends a message', async () => {
-    if (!conversationID) return;
+    if (!conversationID) throw new Error('precondition: start-conversation must succeed first');
     const res = await runCli([
       'assistants', 'send-message', fx.assistantID,
       '--conversation', conversationID,
@@ -42,7 +42,7 @@ const SKIP = fx.skip.includes('assistants');
   });
 
   it('assistants close-conversation closes a conversation', async () => {
-    if (!conversationID) return;
+    if (!conversationID) throw new Error('precondition: start-conversation must succeed first');
     const res = await runCli([
       'assistants', 'close-conversation', fx.assistantID,
       '--conversation', conversationID,

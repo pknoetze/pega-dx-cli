@@ -28,7 +28,7 @@ const SKIP = fx.skip.includes('ui-lists');
   });
 
   it('ui-lists update-personalization updates a personalization', async () => {
-    if (!personalizationId) return;
+    if (!personalizationId) throw new Error('precondition: list-personalizations or create-personalization must succeed first');
     const res = await runCli([
       'ui-lists', 'update-personalization', fx.pageID, personalizationId,
       '--name', 'smoke-personalization-updated',
@@ -46,7 +46,7 @@ const SKIP = fx.skip.includes('ui-lists');
   });
 
   it('ui-lists delete-personalization deletes a personalization', async () => {
-    if (!personalizationId) return;
+    if (!personalizationId) throw new Error('precondition: list-personalizations or create-personalization must succeed first');
     const res = await runCli([
       'ui-lists', 'delete-personalization', fx.pageID, personalizationId,
     ]);

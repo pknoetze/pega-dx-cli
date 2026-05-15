@@ -38,7 +38,7 @@ const SKIP = fx.skip.includes('social');
   });
 
   it('social get-feed returns feed entries', async () => {
-    if (!caseId) return;
+    if (!caseId) throw new Error('precondition: case bootstrap must succeed first');
     const res = await runCli([
       'social', 'get-feed', fx.feedID,
       '--filter-for', caseId,
@@ -47,7 +47,7 @@ const SKIP = fx.skip.includes('social');
   });
 
   it('social list-messages lists messages', async () => {
-    if (!caseId) return;
+    if (!caseId) throw new Error('precondition: case bootstrap must succeed first');
     const res = await runCli([
       'social', 'list-messages',
       '--filter-by', 'CASE',
@@ -57,7 +57,7 @@ const SKIP = fx.skip.includes('social');
   });
 
   it('social post-message posts a message to a case', async () => {
-    if (!caseId) return;
+    if (!caseId) throw new Error('precondition: case bootstrap must succeed first');
     const res = await runCli([
       'social', 'post-message',
       '--context', caseId,
@@ -107,7 +107,7 @@ const SKIP = fx.skip.includes('social');
   });
 
   it('social delete-message deletes a message', async () => {
-    if (!postedMessageId) return;
+    if (!postedMessageId) throw new Error('precondition: post-message must succeed first');
     const res = await runCli(['social', 'delete-message', postedMessageId]);
     expect(res.exitCode).toBe(0);
     postedMessageId = undefined;

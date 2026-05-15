@@ -5,7 +5,7 @@ const SKIP = fx.skip.includes('documents');
 
 (SKIP ? describe.skip : describe)('smoke: documents', () => {
   it('documents get returns document metadata', async () => {
-    const res = await runCli(['documents', 'get', fx.fileID]);
+    const res = await runCli(['documents', 'get', fx.documentID]);
     expect(res.exitCode).toBe(0);
   });
 

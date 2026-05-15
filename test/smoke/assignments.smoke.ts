@@ -29,13 +29,13 @@ const SKIP = fx.skip.includes('assignments');
   });
 
   it('assignments get returns an assignment', async () => {
-    if (!assignmentId) return;
+    if (!assignmentId) throw new Error('precondition: case bootstrap must succeed first');
     const res = await runCli(['assignments', 'get', assignmentId]);
     expect(res.exitCode).toBe(0);
   });
 
   it('assignments get-action returns an action form', async () => {
-    if (!assignmentId || !actionId) return;
+    if (!assignmentId || !actionId) throw new Error('precondition: case bootstrap must succeed first');
     const res = await runCli([
       'assignments', 'get-action', assignmentId,
       '--action', actionId,
@@ -44,7 +44,7 @@ const SKIP = fx.skip.includes('assignments');
   });
 
   it('assignments refresh-action refreshes an action form', async () => {
-    if (!assignmentId || !actionId) return;
+    if (!assignmentId || !actionId) throw new Error('precondition: case bootstrap must succeed first');
     const res = await runCli([
       'assignments', 'refresh-action', assignmentId,
       '--action', actionId,
@@ -53,7 +53,7 @@ const SKIP = fx.skip.includes('assignments');
   });
 
   it('assignments save saves an assignment', async () => {
-    if (!assignmentId || !actionId) return;
+    if (!assignmentId || !actionId) throw new Error('precondition: case bootstrap must succeed first');
     const res = await runCli([
       'assignments', 'save', assignmentId,
       '--action', actionId,
@@ -63,7 +63,7 @@ const SKIP = fx.skip.includes('assignments');
   });
 
   it('assignments navigate-to-step navigates to a step', async () => {
-    if (!assignmentId) return;
+    if (!assignmentId) throw new Error('precondition: case bootstrap must succeed first');
     const res = await runCli([
       'assignments', 'navigate-to-step', assignmentId,
       '--step', 'pyStartAssignment',
@@ -73,13 +73,13 @@ const SKIP = fx.skip.includes('assignments');
   });
 
   it('assignments navigate-back navigates back', async () => {
-    if (!assignmentId) return;
+    if (!assignmentId) throw new Error('precondition: case bootstrap must succeed first');
     const res = await runCli(['assignments', 'navigate-back', assignmentId]);
     expect([0, 1]).toContain(res.exitCode);
   });
 
   it('assignments perform completes an assignment action', async () => {
-    if (!assignmentId || !actionId) return;
+    if (!assignmentId || !actionId) throw new Error('precondition: case bootstrap must succeed first');
     const res = await runCli([
       'assignments', 'perform', assignmentId,
       '--action', actionId,
@@ -89,7 +89,7 @@ const SKIP = fx.skip.includes('assignments');
   });
 
   it('assignments recalculate recalculates fields', async () => {
-    if (!assignmentId || !actionId) return;
+    if (!assignmentId || !actionId) throw new Error('precondition: case bootstrap must succeed first');
     const body = JSON.stringify({ calculations: { fields: [] } });
     const res = await runCli([
       'assignments', 'recalculate', assignmentId,

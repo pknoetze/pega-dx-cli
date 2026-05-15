@@ -9,6 +9,7 @@ export interface SmokeFixtures {
   pageID: string;
   componentID: string;
   fileID: string;
+  documentID: string;
   data_view_ID: string;
   feedID: string;
   messageID: string;

@@ -25,13 +25,13 @@ const SKIP = fx.skip.includes('followers');
   });
 
   it('followers list lists followers on a case', async () => {
-    if (!caseId) return;
+    if (!caseId) throw new Error('precondition: case bootstrap must succeed first');
     const res = await runCli(['followers', 'list', caseId]);
     expect(res.exitCode).toBe(0);
   });
 
   it('followers add adds a follower to a case', async () => {
-    if (!caseId || !operatorId) return;
+    if (!caseId || !operatorId) throw new Error('precondition: case bootstrap and auth ping must succeed first');
     const res = await runCli([
       'followers', 'add', caseId,
       '--user', operatorId,
@@ -40,7 +40,7 @@ const SKIP = fx.skip.includes('followers');
   });
 
   it('followers delete removes a follower from a case', async () => {
-    if (!caseId || !operatorId) return;
+    if (!caseId || !operatorId) throw new Error('precondition: case bootstrap and auth ping must succeed first');
     const res = await runCli([
       'followers', 'delete', caseId,
       '--user', operatorId,

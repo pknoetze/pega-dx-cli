@@ -24,7 +24,7 @@ const SKIP = fx.skip.includes('attachments');
   });
 
   it('attachments upload uploads a file', async () => {
-    if (!tmpFile) return;
+    if (!tmpFile) throw new Error('precondition: tmp file creation must succeed first');
     const res = await runCli(['attachments', 'upload', '--file', tmpFile]);
     expect(res.exitCode).toBe(0);
     const parsed = JSON.parse(res.stdout);
@@ -33,14 +33,14 @@ const SKIP = fx.skip.includes('attachments');
   });
 
   it('attachments add attaches uploaded file to a case', async () => {
-    if (!caseId || !uploadedId) return;
+    if (!caseId || !uploadedId) throw new Error('precondition: case bootstrap and upload must succeed first');
     const attachments = JSON.stringify([{ ID: uploadedId, name: 'smoke.txt', type: 'FILE' }]);
     const res = await runCli(['attachments', 'add', caseId, '--attachments', attachments]);
     expect(res.exitCode).toBe(0);
   });
 
   it('attachments list lists attachments on a case', async () => {
-    if (!caseId) return;
+    if (!caseId) throw new Error('precondition: case bootstrap must succeed first');
     const res = await runCli(['attachments', 'list', caseId]);
     expect(res.exitCode).toBe(0);
     const parsed = JSON.parse(res.stdout);
@@ -52,13 +52,13 @@ const SKIP = fx.skip.includes('attachments');
   });
 
   it('attachments get retrieves attachment metadata', async () => {
-    if (!attachmentId) return;
+    if (!attachmentId) throw new Error('precondition: attachments list must succeed first');
     const res = await runCli(['attachments', 'get', attachmentId]);
     expect(res.exitCode).toBe(0);
   });
 
   it('attachments patch renames an attachment', async () => {
-    if (!attachmentId) return;
+    if (!attachmentId) throw new Error('precondition: attachments list must succeed first');
     const res = await runCli([
       'attachments', 'patch', attachmentId,
       '--name', 'smoke-renamed.txt',
@@ -67,7 +67,7 @@ const SKIP = fx.skip.includes('attachments');
   });
 
   it('attachments delete removes an attachment', async () => {
-    if (!attachmentId) return;
+    if (!attachmentId) throw new Error('precondition: attachments list must succeed first');
     const res = await runCli(['attachments', 'delete', attachmentId]);
     expect(res.exitCode).toBe(0);
     attachmentId = undefined;

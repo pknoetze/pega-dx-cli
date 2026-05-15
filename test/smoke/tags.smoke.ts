@@ -14,13 +14,13 @@ const SKIP = fx.skip.includes('tags');
   });
 
   it('tags list lists tags on a case', async () => {
-    if (!caseId) return;
+    if (!caseId) throw new Error('precondition: case bootstrap must succeed first');
     const res = await runCli(['tags', 'list', caseId]);
     expect(res.exitCode).toBe(0);
   });
 
   it('tags add adds a tag to a case', async () => {
-    if (!caseId) return;
+    if (!caseId) throw new Error('precondition: case bootstrap must succeed first');
     const res = await runCli([
       'tags', 'add', caseId,
       '--tag', 'smoke-test',
@@ -29,7 +29,7 @@ const SKIP = fx.skip.includes('tags');
   });
 
   it('tags delete removes a tag from a case', async () => {
-    if (!caseId) return;
+    if (!caseId) throw new Error('precondition: case bootstrap must succeed first');
     const res = await runCli([
       'tags', 'delete', caseId,
       '--tag', 'smoke-test',

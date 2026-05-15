@@ -5,6 +5,7 @@ const SKIP = fx.skip.includes('ai-agents');
 
 (SKIP ? describe.skip : describe)('smoke: ai-agents', () => {
   let conversationID: string | undefined;
+  let postedMessageId: string | undefined;
 
   it('ai-agents list returns exit 0', async () => {
     const res = await runCli(['ai-agents', 'list']);
@@ -28,7 +29,7 @@ const SKIP = fx.skip.includes('ai-agents');
   });
 
   it('ai-agents get-conversation returns conversation', async () => {
-    if (!conversationID) return;
+    if (!conversationID) throw new Error('precondition: start-conversation must succeed first');
     const res = await runCli([
       'ai-agents', 'get-conversation', fx.agentID,
       '--conversation', conversationID,
@@ -37,37 +38,38 @@ const SKIP = fx.skip.includes('ai-agents');
   });
 
   it('ai-agents send-message sends a message', async () => {
-    if (!conversationID) return;
+    if (!conversationID) throw new Error('precondition: start-conversation must succeed first');
     const res = await runCli([
       'ai-agents', 'send-message', fx.agentID,
       '--conversation', conversationID,
       '--request', 'Hello',
     ]);
     expect(res.exitCode).toBe(0);
+    postedMessageId = JSON.parse(res.stdout)?.ID ?? JSON.parse(res.stdout)?.messageID;
   });
 
   it('ai-agents like likes a message', async () => {
-    if (!conversationID) return;
+    if (!conversationID || !postedMessageId) throw new Error('precondition: send-message must succeed first');
     const res = await runCli([
       'ai-agents', 'like', fx.agentID,
       '--conversation', conversationID,
-      '--message', fx.messageID,
+      '--message', postedMessageId,
     ]);
     expect(res.exitCode).toBe(0);
   });
 
   it('ai-agents dislike dislikes a message', async () => {
-    if (!conversationID) return;
+    if (!conversationID || !postedMessageId) throw new Error('precondition: send-message must succeed first');
     const res = await runCli([
       'ai-agents', 'dislike', fx.agentID,
       '--conversation', conversationID,
-      '--message', fx.messageID,
+      '--message', postedMessageId,
     ]);
     expect(res.exitCode).toBe(0);
   });
 
   it('ai-agents close-conversation closes a conversation', async () => {
-    if (!conversationID) return;
+    if (!conversationID) throw new Error('precondition: start-conversation must succeed first');
     const res = await runCli([
       'ai-agents', 'close-conversation', fx.agentID,
       '--conversation', conversationID,
