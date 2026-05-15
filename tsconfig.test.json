@@ -6,6 +6,6 @@
     "composite": false,
     "types": ["jest", "node"]
   },
-  "include": ["src/**/*", "test/**/*"],
+  "include": ["src/**/*", "test/**/*", "scripts/**/*"],
   "exclude": ["node_modules", "dist"]
 }
