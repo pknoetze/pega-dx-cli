@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/authentication-profiles/{authProfileName}/user-tokens',
+  method: 'DELETE',
+} as const;
+
 export default class AuthProfilesRevokeTokens extends BaseCommand {
   static override description = 'Revoke user-specific tokens for an authentication profile';
   static override examples = [

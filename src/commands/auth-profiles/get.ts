@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/authentication-profiles/{authProfileName}',
+  method: 'GET',
+} as const;
+
 export default class AuthProfilesGet extends BaseCommand {
   static override description = 'Get an authentication profile';
   static override examples = [
