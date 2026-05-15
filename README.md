@@ -2,13 +2,55 @@
 
 A developer-first command-line interface for the Pega Infinity™ DX API V2 (Constellation DX API), designed for both humans at the terminal and LLM coding agents.
 
-## Installation
+## Install
+
+### Pre-built binary (recommended for end users)
+
+Download the latest release for your platform from the [Releases page](https://github.com/pknoetze/pega-dx-cli/releases/latest), then extract and symlink to your PATH.
+
+**macOS (Apple Silicon):**
+```bash
+curl -L https://github.com/pknoetze/pega-dx-cli/releases/latest/download/pega-darwin-arm64.tar.gz | tar xz
+xattr -d com.apple.quarantine ./pega/bin/pega    # clear Gatekeeper quarantine
+sudo ln -s "$(pwd)/pega/bin/pega" /usr/local/bin/pega
+```
+
+**macOS (Intel):** same as above, replacing `pega-darwin-arm64.tar.gz` with `pega-darwin-x64.tar.gz`.
+
+**Linux (x64 / arm64):**
+```bash
+curl -L https://github.com/pknoetze/pega-dx-cli/releases/latest/download/pega-linux-x64.tar.gz | tar xz
+sudo ln -s "$(pwd)/pega/bin/pega" /usr/local/bin/pega
+```
+
+(Use `pega-linux-arm64.tar.gz` on ARM64 hardware.)
+
+**Windows (PowerShell):**
+```powershell
+Invoke-WebRequest -Uri https://github.com/pknoetze/pega-dx-cli/releases/latest/download/pega-win32-x64.zip -OutFile pega.zip
+Expand-Archive pega.zip -DestinationPath .
+# Add the full path to .\pega\bin to your PATH
+```
+
+Verify the download against `SHA256SUMS` on the Releases page.
+
+### npm (recommended for Node.js developers)
 
 ```bash
 npm install -g pega-dx-cli
 ```
 
-This installs the `pega` binary. Requires Node.js 22 or newer.
+Requires Node.js 22 or newer.
+
+### From source
+
+```bash
+git clone https://github.com/pknoetze/pega-dx-cli.git
+cd pega-dx-cli
+npm ci && npm run build && npm link
+```
+
+See [reference/install.md](reference/install.md) for troubleshooting (macOS Gatekeeper, Windows SmartScreen, PATH setup).
 
 ## Configuration
 
