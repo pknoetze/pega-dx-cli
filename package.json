@@ -2,6 +2,7 @@
   "name": "pega-dx-cli",
   "version": "1.0.0",
   "description": "CLI for Pega Infinity DX API V2 (Constellation)",
+  "homepage": "https://pknoetze.github.io/pega-dx-cli/",
   "type": "module",
   "bin": {
     "pega": "./bin/run.js"
@@ -27,7 +28,10 @@
     "smoke": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.smoke.config.ts",
     "prepare": "if [ -x node_modules/.bin/tsc ]; then npm run build && oclif manifest; fi",
     "prepack": "npm run clean && npm run build && oclif manifest",
-    "pack:local": "npm run build && oclif pack tarballs --targets=$(node -e \"console.log(process.platform+'-'+process.arch)\")"
+    "pack:local": "npm run build && oclif pack tarballs --targets=$(node -e \"console.log(process.platform+'-'+process.arch)\")",
+    "docs:generate": "ts-node scripts/generate-docs-site.ts",
+    "docs:dev": "vitepress dev site",
+    "docs:build": "npm run docs:generate && vitepress build site"
   },
   "oclif": {
     "bin": "pega",
@@ -85,6 +89,7 @@
     "rimraf": "^6.0.1",
     "ts-jest": "^29.2.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.0"
+    "typescript": "^5.5.0",
+    "vitepress": "^1.6.4"
   }
 }
