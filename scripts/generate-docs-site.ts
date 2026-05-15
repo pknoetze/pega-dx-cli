@@ -49,7 +49,7 @@ function renderArgsTable(args: Record<string, OclifArg>): string {
   const entries = Object.values(args);
   if (entries.length === 0) return '';
   const lines: string[] = [
-    '**Arguments**',
+    '### Arguments',
     '',
     '| Argument | Required | Description |',
     '|---|---|---|',
@@ -64,7 +64,7 @@ function renderFlagsTable(flags: Record<string, OclifFlag>): string {
   const entries = Object.values(flags);
   if (entries.length === 0) return '';
   const lines: string[] = [
-    '**Flags**',
+    '### Flags',
     '',
     '| Flag | Type | Required | Default | Description |',
     '|---|---|---|---|---|',
@@ -81,10 +81,10 @@ function renderFlagsTable(flags: Record<string, OclifFlag>): string {
 }
 
 function renderExamples(examples: string[]): string {
-  const lines: string[] = ['**Examples**', ''];
+  const lines: string[] = ['### Examples', ''];
   for (const ex of examples) {
     lines.push('```sh');
-    lines.push(ex);
+    lines.push(ex.replace(/<%= config\.bin %>/g, 'pega'));
     lines.push('```');
   }
   return lines.join('\n') + '\n';
@@ -99,10 +99,28 @@ function renderCommandSection(cmd: OclifCommand, ep: CommandEndpoint | undefined
     lines.push(cmd.description);
     lines.push('');
   }
+
+  // Usage section
+  const argParts = Object.values(cmd.args ?? {})
+    .map(a => a.required ? `<${a.name}>` : `[${a.name}]`)
+    .join(' ');
+  const usageLine = `pega ${cmd.id.replace(':', ' ')}${argParts ? ' ' + argParts : ''} [flags]`;
+  lines.push('### Usage');
+  lines.push('');
+  lines.push('```bash');
+  lines.push(usageLine);
+  lines.push('```');
+  lines.push('');
+
   if (ep && ep.path && ep.method) {
-    lines.push(`**Endpoint:** ${ep.method} \`${ep.path}\``);
+    // Build relative path from src/commands/ onward for the GitHub link
+    const relMatch = ep.file.match(/(src[/\\]commands[/\\].+)$/);
+    const relPath = (relMatch?.[1] ?? ep.file).replace(/\\/g, '/');
+    const githubUrl = `https://github.com/pknoetze/pega-dx-cli/blob/main/${relPath}`;
+    lines.push(`**Source endpoint:** \`${ep.method} ${ep.path}\` — [view command source](${githubUrl})`);
     lines.push('');
   }
+
   if (cmd.args && Object.keys(cmd.args).length > 0) {
     lines.push(renderArgsTable(cmd.args));
     lines.push('');
@@ -176,15 +194,17 @@ function renderSidebar(topics: string[]): string {
     .join('\n');
   return [
     "// Auto-generated — do not edit by hand. Run: npm run docs:generate",
-    "export const commands = [",
-    "  {",
-    "    text: 'Commands',",
-    "    collapsed: false,",
-    "    items: [",
+    "export default {",
+    "  commands: [",
+    "    {",
+    "      text: 'Commands',",
+    "      collapsed: false,",
+    "      items: [",
     items,
-    "    ],",
-    "  },",
-    "];",
+    "      ],",
+    "    },",
+    "  ],",
+    "};",
     "",
   ].join('\n');
 }

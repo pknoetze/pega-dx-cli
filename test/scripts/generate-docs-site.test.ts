@@ -21,7 +21,7 @@ const manifest = JSON.stringify({
     'cases:get': {
       id: 'cases:get',
       description: 'Get a Pega case by ID',
-      examples: ['pega cases get MYAPP-CASE-1'],
+      examples: ['<%= config.bin %> cases get MYAPP-CASE-1'],
       args: { caseId: { name: 'caseId', required: true, description: 'Full case handle' } },
       flags: {
         format: { name: 'format', type: 'option', description: 'Output format', default: 'json' },
@@ -82,7 +82,19 @@ describe('generateDocsSite', () => {
     expect(casesMd).toContain('## cases get');
     expect(casesMd).toContain('## cases create');
     expect(casesMd).toContain('Get a Pega case by ID');
-    expect(casesMd).toContain("GET `/cases/{caseID}`");
+    expect(casesMd).toContain('`GET /cases/{caseID}`');
+    // config.bin substitution: raw template string must not appear in output
+    expect(casesMd).not.toContain('<%= config.bin %>');
+    expect(casesMd).toContain('pega cases get MYAPP-CASE-1');
+    // H3 headings
+    expect(casesMd).toContain('### Arguments');
+    expect(casesMd).toContain('### Flags');
+    expect(casesMd).toContain('### Examples');
+    // Usage section
+    expect(casesMd).toContain('### Usage');
+    expect(casesMd).toContain('pega cases get <caseId> [flags]');
+    // GitHub source link
+    expect(casesMd).toContain('[view command source](https://github.com/pknoetze/pega-dx-cli/blob/main/');
   });
 
   it('writes sidebar-generated.ts with one entry per topic', () => {
@@ -93,6 +105,9 @@ describe('generateDocsSite', () => {
     expect(sidebar).toContain("text: 'Commands'");
     expect(sidebar).toContain('/commands/cases');
     expect(sidebar).toContain('/commands/auth');
+    // Must use default export so config.ts can read mod.default?.commands
+    expect(sidebar).toContain('export default {');
+    expect(sidebar).toContain('commands:');
   });
 
   it('copies coverage doc with prepended frontmatter', () => {
