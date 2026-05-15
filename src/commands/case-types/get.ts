@@ -14,6 +14,11 @@ interface CaseTypesListResponse {
   [key: string]: unknown;
 }
 
+export const __endpoint = {
+  path: '/casetypes',
+  method: 'GET',
+} as const;
+
 export default class CaseTypesGet extends BaseCommand {
   static override description = 'Get full details of a specific case type (filters the case-types list response)';
   static override examples = ['<%= config.bin %> case-types get Uplus-FS-Work-ProductComplaint'];

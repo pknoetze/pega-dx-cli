@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/casetypes/{caseTypeID}/actions/{actionID}',
+  method: 'GET',
+} as const;
+
 export default class CaseTypesGetAction extends BaseCommand {
   static override description = 'Get the creation action/view for a case type';
   static override examples = [
