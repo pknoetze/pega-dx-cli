@@ -2,6 +2,11 @@ import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { getConfig } from '../../lib/config.js';
 import { isNormalizedError } from '../../lib/errors.js';
 
+export const __endpoint = {
+  path: '/assignments/next',
+  method: 'GET',
+} as const;
+
 export default class AssignmentsGetNext extends BaseCommand {
   static override description = 'Get the next assignment from the worklist';
   static override examples = ['<%= config.bin %> assignments get-next'];

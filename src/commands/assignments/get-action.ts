@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/assignments/{assignmentID}/actions/{actionID}',
+  method: 'GET',
+} as const;
+
 export default class AssignmentsGetAction extends BaseCommand {
   static override description = 'Get the action/view details for a specific action on an assignment';
   static override examples = ['<%= config.bin %> assignments get-action ASSIGN-1 --action Submit'];

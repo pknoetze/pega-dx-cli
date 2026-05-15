@@ -16,6 +16,11 @@ function invalidArgs(message: string): NormalizedError {
   return { code: 'INVALID_ARGS', message, httpStatus: 0 };
 }
 
+export const __endpoint = {
+  path: '/assignments/{assignmentID}/actions/{actionID}',
+  method: 'PATCH',
+} as const;
+
 export default class AssignmentsPerform extends BaseCommand {
   static override description = 'Perform an assignment action (auto-fetches eTag)';
   static override examples = [

@@ -2,6 +2,11 @@ import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { getConfig } from '../../lib/config.js';
 
+export const __endpoint = {
+  path: '/assignments/{assignmentID}',
+  method: 'GET',
+} as const;
+
 export default class AssignmentsGet extends BaseCommand {
   static override description = 'Get a Pega assignment by ID';
   static override examples = ['<%= config.bin %> assignments get ASSIGN-WORKLIST X-1!FLOW'];

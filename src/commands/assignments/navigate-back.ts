@@ -2,6 +2,11 @@ import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { composeMutationBody, type MutationBodyFlags } from '../../lib/input.js';
 
+export const __endpoint = {
+  path: '/assignments/{assignmentID}/navigation_steps/previous',
+  method: 'PATCH',
+} as const;
+
 export default class AssignmentsNavigateBack extends BaseCommand {
   static override description = 'Navigate back to the previous step in a multi-step assignment';
   static override examples = [
