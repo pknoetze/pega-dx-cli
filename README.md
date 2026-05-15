@@ -1,6 +1,10 @@
 # pega-dx-cli
 
+[![Documentation](https://img.shields.io/badge/docs-pknoetze.github.io%2Fpega--dx--cli-blue)](https://pknoetze.github.io/pega-dx-cli/)
+
 A developer-first command-line interface for the Pega Infinity™ DX API V2 (Constellation DX API), designed for both humans at the terminal and LLM coding agents.
+
+📚 **[Full documentation](https://pknoetze.github.io/pega-dx-cli/)** — install, quick start, command reference, API coverage matrix.
 
 ## Install
 
