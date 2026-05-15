@@ -1,6 +1,11 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/messages',
+  method: 'POST',
+} as const;
+
 export default class SocialPostMessage extends BaseCommand {
   static override description = 'Post a new Pulse message';
   static override examples = ['<%= config.bin %> social post-message --context MYORG-WORK\\!M-1 --message "hello"'];

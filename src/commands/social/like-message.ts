@@ -1,6 +1,11 @@
 import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/messages/{messageID}/likes',
+  method: 'POST',
+} as const;
+
 export default class SocialLikeMessage extends BaseCommand {
   static override description = 'Add a like to a Pulse message';
   static override examples = ['<%= config.bin %> social like-message MSG-1'];

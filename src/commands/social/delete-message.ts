@@ -1,6 +1,11 @@
 import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/messages/{messageID}',
+  method: 'DELETE',
+} as const;
+
 export default class SocialDeleteMessage extends BaseCommand {
   static override description = 'Delete a Pulse message';
   static override examples = ['<%= config.bin %> social delete-message MSG-1'];

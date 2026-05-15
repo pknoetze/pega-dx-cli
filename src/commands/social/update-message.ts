@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/messages/{messageID}',
+  method: 'PUT',
+} as const;
+
 export default class SocialUpdateMessage extends BaseCommand {
   static override description = 'Edit a Pulse message';
   static override examples = ['<%= config.bin %> social update-message MSG-1 --message "edited"'];

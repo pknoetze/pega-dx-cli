@@ -1,6 +1,11 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/mentions',
+  method: 'GET',
+} as const;
+
 export default class SocialListMentions extends BaseCommand {
   static override description = 'List mentions for a search string and type';
   static override examples = ['<%= config.bin %> social list-mentions --mentions-type Operators --search-for jdoe'];

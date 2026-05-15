@@ -1,6 +1,11 @@
 import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/messages/{messageID}',
+  method: 'GET',
+} as const;
+
 export default class SocialGetMessage extends BaseCommand {
   static override description = 'Get a Pulse message by ID';
   static override examples = ['<%= config.bin %> social get-message MSG-1'];

@@ -1,6 +1,11 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/messages',
+  method: 'GET',
+} as const;
+
 export default class SocialListMessages extends BaseCommand {
   static override description = 'List Pulse messages for a context';
   static override examples = ['<%= config.bin %> social list-messages --filter-by Pulse --filter-for MYORG-WORK\\!M-1'];

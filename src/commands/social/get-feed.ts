@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/feeds/{feedID}',
+  method: 'GET',
+} as const;
+
 export default class SocialGetFeed extends BaseCommand {
   static override description = 'Get a Pulse feed list';
   static override examples = ['<%= config.bin %> social get-feed MyFeed --filter-for MYORG-WORK\\!M-1'];

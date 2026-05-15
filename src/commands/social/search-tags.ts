@@ -1,6 +1,11 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/tags',
+  method: 'GET',
+} as const;
+
 export default class SocialSearchTags extends BaseCommand {
   static override description = 'Search tags by string';
   static override examples = ['<%= config.bin %> social search-tags --search-for security --list-size 20'];

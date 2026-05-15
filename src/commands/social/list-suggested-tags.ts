@@ -1,6 +1,11 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/suggested_tags',
+  method: 'GET',
+} as const;
+
 export default class SocialListSuggestedTags extends BaseCommand {
   static override description = 'List suggested + recent tags for a Pulse context';
   static override examples = ['<%= config.bin %> social list-suggested-tags --context MYORG-WORK\\!M-1'];

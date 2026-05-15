@@ -1,6 +1,11 @@
 import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/messages/{messageID}/likes',
+  method: 'DELETE',
+} as const;
+
 export default class SocialUnlikeMessage extends BaseCommand {
   static override description = 'Remove a like from a Pulse message';
   static override examples = ['<%= config.bin %> social unlike-message MSG-1'];

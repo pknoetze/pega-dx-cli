@@ -1,6 +1,11 @@
 import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/messages/{messageID}/likes',
+  method: 'GET',
+} as const;
+
 export default class SocialListLikes extends BaseCommand {
   static override description = 'List likes on a Pulse message';
   static override examples = ['<%= config.bin %> social list-likes MSG-1'];
