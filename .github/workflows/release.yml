@@ -1,0 +1,105 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - run: NODE_OPTIONS=--experimental-vm-modules npm test
+      - run: npm run audit:endpoints
+      - run: npm run check:examples
+
+  build-tarballs:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - name: Pack tarballs (all targets)
+        run: npx oclif pack tarballs --targets=darwin-x64,darwin-arm64,linux-x64,linux-arm64,win32-x64
+      - name: Build win32 zip from tarball (oclif pack win is NSIS-only on Linux)
+        run: |
+          tmp=$(mktemp -d)
+          win_tarball=$(ls dist/pega-v*-win32-x64.tar.gz | head -1)
+          tar -xzf "$win_tarball" -C "$tmp"
+          # Derive SHA from oclif's actual filename so the zip name matches
+          sha=$(basename "$win_tarball" | sed 's/pega-v[^-]*-\([^-]*\)-.*/\1/')
+          ver=$(node -p 'require("./package.json").version')
+          (cd "$tmp" && zip -r "$GITHUB_WORKSPACE/dist/pega-v${ver}-${sha}-win32-x64.zip" pega)
+          rm -rf "$tmp"
+      - name: Rename to stable filenames + SHA256SUMS
+        run: ./scripts/rename-tarballs.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-bundle
+          path: dist/release/
+          retention-days: 7
+
+  release:
+    needs: build-tarballs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-bundle
+          path: dist/release/
+      - name: Extract release notes
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          node --loader ts-node/esm scripts/extract-release-notes.ts "$TAG" > /tmp/notes.md 2>/tmp/notes.err \
+            || echo "See CHANGELOG.md for details." > /tmp/notes.md
+      - name: Determine prerelease flag
+        id: prerelease
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [[ "$TAG" =~ -(rc|beta|alpha)\. ]]; then
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body_path: /tmp/notes.md
+          prerelease: ${{ steps.prerelease.outputs.is_prerelease }}
+          fail_on_unmatched_files: true
+          files: |
+            dist/release/pega-darwin-x64.tar.gz
+            dist/release/pega-darwin-arm64.tar.gz
+            dist/release/pega-linux-x64.tar.gz
+            dist/release/pega-linux-arm64.tar.gz
+            dist/release/pega-win32-x64.tar.gz
+            dist/release/pega-win32-x64.zip
+            dist/release/SHA256SUMS
