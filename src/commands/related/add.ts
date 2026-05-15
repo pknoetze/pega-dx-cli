@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}/related_cases',
+  method: 'POST',
+} as const;
+
 export default class RelatedAdd extends BaseCommand {
   static override description = 'Add a related case link';
   static override examples = [

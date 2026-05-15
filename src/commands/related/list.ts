@@ -1,6 +1,11 @@
 import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}/related_cases',
+  method: 'GET',
+} as const;
+
 export default class RelatedList extends BaseCommand {
   static override description = 'List all related cases';
   static override examples = ['<%= config.bin %> related list MYAPP-CASE-1'];
