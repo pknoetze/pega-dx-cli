@@ -5,6 +5,11 @@ import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { getConfig } from '../../lib/config.js';
 import type { NormalizedError } from '../../lib/errors.js';
 
+export const __endpoint = {
+  path: '/attachments/upload',
+  method: 'POST',
+} as const;
+
 export default class AttachmentsUpload extends BaseCommand {
   static override description = 'Upload a file as a Pega attachment (multipart POST)';
   static override examples = [

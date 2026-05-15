@@ -1,6 +1,11 @@
 import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/attachments/{attachmentID}',
+  method: 'DELETE',
+} as const;
+
 export default class AttachmentsDelete extends BaseCommand {
   static override description = 'Delete a Pega attachment by ID';
   static override examples = ['<%= config.bin %> attachments delete ATTACH-ID-1'];

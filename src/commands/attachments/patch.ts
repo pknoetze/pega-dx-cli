@@ -2,6 +2,11 @@ import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import type { NormalizedError } from '../../lib/errors.js';
 
+export const __endpoint = {
+  path: '/attachments/{attachmentID}',
+  method: 'PATCH',
+} as const;
+
 export default class AttachmentsPatch extends BaseCommand {
   static override description = 'Update attachment metadata (name and/or category)';
   static override examples = [

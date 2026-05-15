@@ -3,6 +3,11 @@ import fsPromises from 'node:fs/promises';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { getConfig } from '../../lib/config.js';
 
+export const __endpoint = {
+  path: '/attachments/{attachmentID}',
+  method: 'GET',
+} as const;
+
 export default class AttachmentsGet extends BaseCommand {
   static override description = 'Get a Pega attachment by ID';
   static override examples = [

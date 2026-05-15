@@ -2,6 +2,11 @@ import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { parseDataInput } from '../../lib/input.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}/attachments',
+  method: 'POST',
+} as const;
+
 export default class AttachmentsAdd extends BaseCommand {
   static override description = 'Add attachments to a Pega case (atomic batch POST)';
   static override examples = [
