@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/ui_lists/{viewName}/move',
+  method: 'PATCH',
+} as const;
+
 export default class UiListsMove extends BaseCommand {
   static override description = 'Move a record within a UI list';
   static override examples = ['<%= config.bin %> ui-lists move MyListView --source-id R-1 --destination-id R-2'];

@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/ui_lists/{ui_list_ID}/personalizations/{personalizationID}',
+  method: 'PUT',
+} as const;
+
 export default class UiListsUpdatePersonalization extends BaseCommand {
   static override description = 'Update a personalization on a UI list';
   static override examples = ['<%= config.bin %> ui-lists update-personalization LIST-1 PERS-1 --name "Edited"'];
