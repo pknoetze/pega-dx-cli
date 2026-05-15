@@ -2,6 +2,11 @@ import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { parseDataInput } from '../../lib/input.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}/participants',
+  method: 'POST',
+} as const;
+
 export default class ParticipantsAdd extends BaseCommand {
   static override description = 'Add a participant to a case in a given role';
   static override examples = [

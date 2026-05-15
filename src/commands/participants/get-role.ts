@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}/participant_roles/{participant_role_ID}',
+  method: 'GET',
+} as const;
+
 export default class ParticipantsGetRole extends BaseCommand {
   static override description = 'Get details of a specific participant role on a case';
   static override examples = [

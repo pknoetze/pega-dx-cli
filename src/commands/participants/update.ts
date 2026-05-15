@@ -2,6 +2,11 @@ import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { composeMutationBody, type MutationBodyFlags } from '../../lib/input.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}/participants/{participantID}',
+  method: 'PATCH',
+} as const;
+
 export default class ParticipantsUpdate extends BaseCommand {
   static override description = "Update a participant's details";
   static override examples = [
