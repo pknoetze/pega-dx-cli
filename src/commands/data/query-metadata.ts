@@ -3,6 +3,11 @@ import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { composeDataQueryBody, type DataQueryBodyFlags } from '../../lib/input.js';
 import { EXTENDED_TIMEOUT_MS } from '../../lib/api-client.js';
 
+export const __endpoint = {
+  path: '/data_views/{data_view_ID}/metadata',
+  method: 'POST',
+} as const;
+
 export default class DataQueryMetadata extends BaseCommand {
   static override description = 'Get metadata for a data view by POSTing to /data_views/{dataViewId}/metadata';
   static override examples = [

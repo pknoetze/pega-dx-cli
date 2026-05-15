@@ -2,6 +2,11 @@ import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { parseDataInput } from '../../lib/input.js';
 
+export const __endpoint = {
+  path: '/data/{data_view_ID}/actions/{action_ID}',
+  method: 'POST',
+} as const;
+
 export default class DataGetAction extends BaseCommand {
   static override description = 'Get a specific action for a data record';
   static override examples = [

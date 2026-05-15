@@ -2,6 +2,11 @@ import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { parseDataInput } from '../../lib/input.js';
 
+export const __endpoint = {
+  path: '/data/{data_view_ID}',
+  method: 'PUT',
+} as const;
+
 export default class DataUpdate extends BaseCommand {
   static override description = 'Update a data record (PUT with eTag)';
   static override examples = [

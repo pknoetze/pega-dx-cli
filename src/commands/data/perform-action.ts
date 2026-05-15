@@ -2,6 +2,11 @@ import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { composeMutationBody, type MutationBodyFlags } from '../../lib/input.js';
 
+export const __endpoint = {
+  path: '/data/{data_view_ID}/actions/{action_ID}',
+  method: 'PATCH',
+} as const;
+
 export default class DataPerformAction extends BaseCommand {
   static override description = 'Perform an action on a data record';
   static override examples = [

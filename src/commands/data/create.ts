@@ -2,6 +2,11 @@ import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { parseDataInput } from '../../lib/input.js';
 
+export const __endpoint = {
+  path: '/data/{data_view_ID}',
+  method: 'POST',
+} as const;
+
 export default class DataCreate extends BaseCommand {
   static override description = 'Create a new data record';
   static override examples = [

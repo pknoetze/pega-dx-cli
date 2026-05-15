@@ -1,6 +1,11 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/data_pages',
+  method: 'GET',
+} as const;
+
 export default class DataListPages extends BaseCommand {
   static override description = 'List data pages available in the application';
   static override examples = [

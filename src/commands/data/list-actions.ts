@@ -1,6 +1,11 @@
 import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/data/{data_view_ID}/actions',
+  method: 'POST',
+} as const;
+
 export default class DataListActions extends BaseCommand {
   static override description = 'List available actions for a data record';
   static override examples = ['<%= config.bin %> data list-actions D_MyDataView'];

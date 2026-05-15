@@ -1,6 +1,11 @@
 import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/data_views/{data_view_ID}/metadata',
+  method: 'GET',
+} as const;
+
 export default class DataGetMetadata extends BaseCommand {
   static override description = 'Get metadata for a data view by ID';
   static override examples = ['<%= config.bin %> data get-metadata D_MyDataView'];
