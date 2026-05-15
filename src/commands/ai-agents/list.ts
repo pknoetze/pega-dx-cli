@@ -1,5 +1,10 @@
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/ai-agents',
+  method: 'GET',
+} as const;
+
 export default class AiAgentsList extends BaseCommand {
   static override description = 'Fetch all AI agents enabled for external access';
   static override examples = ['<%= config.bin %> ai-agents list'];

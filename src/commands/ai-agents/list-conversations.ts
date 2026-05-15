@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/ai-agents/{agentID}/conversations',
+  method: 'GET',
+} as const;
+
 export default class AiAgentsListConversations extends BaseCommand {
   static override description = 'List conversations for an AI agent';
   static override examples = [

@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/ai-agents/{agentID}/conversations/{conversationID}/close',
+  method: 'PUT',
+} as const;
+
 export default class AiAgentsCloseConversation extends BaseCommand {
   static override description = 'Close an AI agent conversation';
   static override examples = ['<%= config.bin %> ai-agents close-conversation MYAGENT --conversation PXCONV-1'];

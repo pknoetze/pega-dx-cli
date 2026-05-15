@@ -2,6 +2,11 @@ import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { parseDataInput } from '../../lib/input.js';
 
+export const __endpoint = {
+  path: '/ai-agents/{agentID}/conversations/{conversationID}',
+  method: 'PATCH',
+} as const;
+
 export default class AiAgentsSendMessage extends BaseCommand {
   static override description = 'Send a message in an AI agent conversation';
   static override examples = [

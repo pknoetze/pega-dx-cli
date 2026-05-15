@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/ai-agents/{agentID}/conversations/{conversationID}',
+  method: 'GET',
+} as const;
+
 export default class AiAgentsGetConversation extends BaseCommand {
   static override description = 'Get details of a single AI agent conversation';
   static override examples = ['<%= config.bin %> ai-agents get-conversation MYAGENT --conversation PXCONV-503025'];

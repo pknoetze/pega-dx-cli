@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/ai-agents/{agentID}/conversations/{conversationID}/messages/{messageID}/dislike',
+  method: 'PUT',
+} as const;
+
 export default class AiAgentsDislike extends BaseCommand {
   static override description = 'Dislike a message in an AI agent conversation';
   static override examples = [
