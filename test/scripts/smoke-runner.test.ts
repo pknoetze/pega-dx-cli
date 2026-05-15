@@ -11,6 +11,7 @@ describe('runCli (framework self-test)', () => {
   it('captures exit code 2 for unknown command', async () => {
     const res = await runCli(['no-such-command-xyz']);
     expect(res.exitCode).not.toBe(0);
+    expect(res.stderr.length).toBeGreaterThan(0);
   });
 });
 
