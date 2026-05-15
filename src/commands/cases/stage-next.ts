@@ -1,6 +1,11 @@
 import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}/stages/next',
+  method: 'POST',
+} as const;
+
 export default class CasesStageNext extends BaseCommand {
   static override description = 'Advance the case to the next stage';
   static override examples = ['<%= config.bin %> cases stage-next MYAPP-CASE-1'];

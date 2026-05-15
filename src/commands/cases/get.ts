@@ -2,6 +2,11 @@ import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { getConfig } from '../../lib/config.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}',
+  method: 'GET',
+} as const;
+
 export default class CasesGet extends BaseCommand {
   static override description = 'Get a Pega case by ID';
   static override examples = ['<%= config.bin %> cases get MYAPP-CASE-1 --fields status,urgency'];

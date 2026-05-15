@@ -2,6 +2,11 @@ import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { composeMutationBody, type MutationBodyFlags } from '../../lib/input.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}/actions/{actionID}/refresh',
+  method: 'PATCH',
+} as const;
+
 export default class CasesRefreshAction extends BaseCommand {
   static override description = 'Refresh a case action view (re-render form)';
   static override examples = [

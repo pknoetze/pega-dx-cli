@@ -2,6 +2,11 @@ import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { parseDataInput } from '../../lib/input.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}/actions/{actionID}/recalculate',
+  method: 'PATCH',
+} as const;
+
 export default class CasesRecalculate extends BaseCommand {
   static override description = 'Recalculate calculated fields and when conditions for a case action';
   static override examples = [

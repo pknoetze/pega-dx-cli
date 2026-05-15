@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}/processes/{processID}',
+  method: 'POST',
+} as const;
+
 export default class CasesStartProcess extends BaseCommand {
   static override description = 'Start an optional or stage process on a case';
   static override examples = [

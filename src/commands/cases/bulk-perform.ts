@@ -6,6 +6,11 @@ import type { NormalizedError } from '../../lib/errors.js';
 
 // Bypasses runMutateWithEtag: bulk endpoint does NOT require If-Match (PDF p.329).
 // Custom 207/202 response handling lives inline.
+export const __endpoint = {
+  path: '/cases',
+  method: 'PATCH',
+} as const;
+
 export default class CasesBulkPerform extends BaseCommand {
   static override description = 'Perform an action across multiple cases in a single API call';
   static override examples = [

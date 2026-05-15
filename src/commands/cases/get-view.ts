@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}/views/{viewID}',
+  method: 'GET',
+} as const;
+
 export default class CasesGetView extends BaseCommand {
   static override description = 'Get a named view for a case';
   static override examples = ['<%= config.bin %> cases get-view MYAPP-CASE-1 --view Summary'];

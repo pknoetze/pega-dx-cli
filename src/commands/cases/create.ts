@@ -3,6 +3,11 @@ import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { getConfig } from '../../lib/config.js';
 import { parseDataInput } from '../../lib/input.js';
 
+export const __endpoint = {
+  path: '/cases',
+  method: 'POST',
+} as const;
+
 export default class CasesCreate extends BaseCommand {
   static override description = 'Create a new Pega case (V2)';
   static override examples = [

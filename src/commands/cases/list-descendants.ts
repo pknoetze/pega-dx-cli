@@ -1,6 +1,11 @@
 import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}/descendants',
+  method: 'GET',
+} as const;
+
 export default class CasesListDescendants extends BaseCommand {
   static override description = 'List all descendant cases in the case hierarchy';
   static override examples = ['<%= config.bin %> cases list-descendants MYAPP-CASE-1'];

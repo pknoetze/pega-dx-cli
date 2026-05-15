@@ -1,6 +1,11 @@
 import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}/attachment_categories',
+  method: 'GET',
+} as const;
+
 export default class CasesListAttachmentCategories extends BaseCommand {
   static override description = 'List configured attachment categories on a case';
   static override examples = [

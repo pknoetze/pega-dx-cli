@@ -2,6 +2,11 @@ import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { composeMutationBody, type MutationBodyFlags } from '../../lib/input.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}/actions/{actionID}',
+  method: 'PATCH',
+} as const;
+
 export default class CasesPerformAction extends BaseCommand {
   static override description = 'Perform a case-level action';
   static override examples = [

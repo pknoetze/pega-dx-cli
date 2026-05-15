@@ -1,6 +1,11 @@
 import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}/updates',
+  method: 'DELETE',
+} as const;
+
 export default class CasesDiscardUpdates extends BaseCommand {
   static override description = 'Release the case lock (discard pending updates)';
   static override examples = ['<%= config.bin %> cases discard-updates MYAPP-CASE-1'];

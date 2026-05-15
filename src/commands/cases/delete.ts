@@ -2,6 +2,11 @@ import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { getConfig } from '../../lib/config.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}',
+  method: 'DELETE',
+} as const;
+
 export default class CasesDelete extends BaseCommand {
   static override description = 'Delete a Pega case (V2)';
   static override examples = ['<%= config.bin %> cases delete MYAPP-CASE-1'];

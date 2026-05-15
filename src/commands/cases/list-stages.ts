@@ -1,6 +1,11 @@
 import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}/stages',
+  method: 'GET',
+} as const;
+
 export default class CasesListStages extends BaseCommand {
   static override description = 'List stages for a case';
   static override examples = ['<%= config.bin %> cases list-stages MYAPP-CASE-1'];

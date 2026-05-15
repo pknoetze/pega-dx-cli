@@ -2,6 +2,11 @@ import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { parseDataInput } from '../../lib/input.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}/views/{viewID}/calculated_fields',
+  method: 'POST',
+} as const;
+
 export default class CasesCalcFields extends BaseCommand {
   static override description = 'Compute calculated fields for a case view';
   static override examples = [

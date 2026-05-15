@@ -1,6 +1,11 @@
 import { Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/cases/bulk-actions',
+  method: 'POST',
+} as const;
+
 export default class CasesBulkActions extends BaseCommand {
   static override description = 'List bulk actions available across a set of cases';
   static override examples = [

@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/cases/{caseID}/actions/{actionID}',
+  method: 'GET',
+} as const;
+
 export default class CasesGetAction extends BaseCommand {
   static override description = 'Get the view/form for a specific action on a case';
   static override examples = ['<%= config.bin %> cases get-action MYAPP-CASE-1 --action Approve'];
