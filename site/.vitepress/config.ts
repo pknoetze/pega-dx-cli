@@ -1,0 +1,50 @@
+import { defineConfig } from 'vitepress';
+import { existsSync } from 'fs';
+import { resolve } from 'path';
+import sidebarStatic from './sidebar-static.js';
+
+// Generated sidebar may not exist on first run — import lazily.
+let sidebarGeneratedCommands: unknown[] = [];
+try {
+  const generatedPath = resolve(__dirname, './sidebar-generated.js');
+  if (existsSync(generatedPath)) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const mod = require(generatedPath) as { default?: { commands?: unknown[] } };
+    sidebarGeneratedCommands = mod.default?.commands ?? [];
+  }
+} catch {
+  // ignore — generator hasn't run yet
+}
+
+export default defineConfig({
+  title: 'pega-dx-cli',
+  description: 'CLI for the Pega Infinity DX API v2 (Constellation)',
+  base: '/pega-dx-cli/',
+  cleanUrls: true,
+  lastUpdated: true,
+  themeConfig: {
+    logo: '/pega-logo.svg',
+    nav: [
+      { text: 'Install', link: '/install' },
+      { text: 'Quick Start', link: '/quick-start' },
+      { text: 'Commands', link: '/commands/' },
+      { text: 'API Coverage', link: '/api-coverage' },
+      { text: 'Changelog', link: 'https://github.com/pknoetze/pega-dx-cli/blob/main/CHANGELOG.md' },
+    ],
+    sidebar: {
+      '/': [...sidebarStatic, ...sidebarGeneratedCommands],
+    },
+    socialLinks: [
+      { icon: 'github', link: 'https://github.com/pknoetze/pega-dx-cli' },
+    ],
+    search: { provider: 'local' },
+    editLink: {
+      pattern: 'https://github.com/pknoetze/pega-dx-cli/edit/main/site/:path',
+      text: 'Edit this page on GitHub',
+    },
+    footer: {
+      message: 'Released under the MIT License.',
+      copyright: 'Copyright © 2026 Philip Knoetze',
+    },
+  },
+});
