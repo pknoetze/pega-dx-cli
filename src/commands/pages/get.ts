@@ -1,6 +1,11 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/pages/{pageID}',
+  method: 'GET',
+} as const;
+
 export default class PagesGet extends BaseCommand {
   static override description = 'Get page details by page ID';
   static override examples = [

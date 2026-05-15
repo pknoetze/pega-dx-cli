@@ -1,6 +1,11 @@
 import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/portals/{portalID}',
+  method: 'GET',
+} as const;
+
 export default class PagesPortal extends BaseCommand {
   static override description = 'Get portal details by portal ID';
   static override examples = ['<%= config.bin %> pages portal MyPortal'];

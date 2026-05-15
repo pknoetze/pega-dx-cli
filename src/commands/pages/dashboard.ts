@@ -1,6 +1,11 @@
 import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/dashboard/{dashboardID}',
+  method: 'GET',
+} as const;
+
 export default class PagesDashboard extends BaseCommand {
   static override description = 'Get page details for displaying a Dashboard';
   static override examples = ['<%= config.bin %> pages dashboard MyDashboard'];

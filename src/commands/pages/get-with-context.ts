@@ -2,6 +2,11 @@ import { Args, Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import type { NormalizedError } from '../../lib/errors.js';
 
+export const __endpoint = {
+  path: '/pages/{pageID}',
+  method: 'POST',
+} as const;
+
 export default class PagesGetWithContext extends BaseCommand {
   static override description = 'Get page details with a data context (POST /pages/{pageID})';
   static override examples = [

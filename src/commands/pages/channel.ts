@@ -1,6 +1,11 @@
 import { Args } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 
+export const __endpoint = {
+  path: '/channels/{channelID}',
+  method: 'GET',
+} as const;
+
 export default class PagesChannel extends BaseCommand {
   static override description = 'Get channel details by channel ID';
   static override examples = ['<%= config.bin %> pages channel MyChannel'];
