@@ -25,9 +25,9 @@
     "audit:endpoints": "node --loader ts-node/esm scripts/audit-endpoints.ts",
     "check:examples": "node --loader ts-node/esm scripts/check-examples.ts",
     "smoke": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.smoke.config.ts",
-    "prepare": "[ -x node_modules/.bin/tsc ] && npm run build && oclif manifest || true",
+    "prepare": "if [ -x node_modules/.bin/tsc ]; then npm run build && oclif manifest; fi",
     "prepack": "npm run clean && npm run build && oclif manifest",
-    "pack:local": "TARBALL=$(npm pack 2>/dev/null | tail -1) && oclif pack tarballs --tarball=\"$TARBALL\" --targets=$(node -e \"console.log(process.platform+'-'+process.arch)\")"
+    "pack:local": "npm run build && oclif pack tarballs --targets=$(node -e \"console.log(process.platform+'-'+process.arch)\")"
   },
   "oclif": {
     "bin": "pega",
