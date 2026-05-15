@@ -3,6 +3,11 @@ import fsPromises from 'node:fs/promises';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { getConfig } from '../../lib/config.js';
 
+export const __endpoint = {
+  path: '/users/{user_ID}/profile-image',
+  method: 'GET',
+} as const;
+
 export default class StaticContentProfileImage extends BaseCommand {
   static override description = 'Get a user profile image';
   static override examples = [

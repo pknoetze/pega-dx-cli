@@ -3,6 +3,11 @@ import fsPromises from 'node:fs/promises';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { getConfig } from '../../lib/config.js';
 
+export const __endpoint = {
+  path: '/components/{componentID}',
+  method: 'GET',
+} as const;
+
 export default class StaticContentComponent extends BaseCommand {
   static override description = 'Get a custom component as raw JavaScript';
   static override examples = [

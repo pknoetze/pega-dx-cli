@@ -3,6 +3,11 @@ import fsPromises from 'node:fs/promises';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { getConfig } from '../../lib/config.js';
 
+export const __endpoint = {
+  path: '/files/{fileID}',
+  method: 'GET',
+} as const;
+
 export default class StaticContentFile extends BaseCommand {
   static override description = 'Get a static file (binary). --output is required.';
   static override examples = [
