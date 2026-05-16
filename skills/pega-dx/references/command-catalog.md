@@ -1166,6 +1166,65 @@ Revoke user-specific tokens for an authentication profile
 pega auth-profiles revoke-tokens MyProfile
 ```
 
+## skill
+
+### `pega skill install`
+
+Install the pega-dx agent skill into the right location for your AI tool. Note: --profile is ignored — this command makes no API calls.
+
+| Flag | Type | Required | Description |
+|---|---|---|---|
+| `--format` | option | No | Output format (json, compact, yaml, table) |
+| `--fields` | option | No | Comma-separated top-level fields to include in output |
+| `--dry-run` | boolean | No | Print HTTP request details and exit without executing |
+| `--quiet` | boolean | No | Suppress all stderr progress/warning output |
+| `--verbose` | boolean | No | Emit full HTTP request/response details to stderr |
+| `--no-cache` | boolean | No | Bypass token file cache; perform fresh OAuth exchange |
+| `--profile` | option | No | Named config profile |
+| `--target` | option | No | Where to install the skill |
+| `--dest` | option | No | Destination path (required when --target dir) |
+| `--force` | boolean | No | Overwrite existing destination |
+
+```bash
+pega skill install
+```
+
+### `pega skill list`
+
+List available skill targets and resolved install paths
+
+| Flag | Type | Required | Description |
+|---|---|---|---|
+| `--format` | option | No | Output format (json, compact, yaml, table) |
+| `--fields` | option | No | Comma-separated top-level fields to include in output |
+| `--dry-run` | boolean | No | Print HTTP request details and exit without executing |
+| `--quiet` | boolean | No | Suppress all stderr progress/warning output |
+| `--verbose` | boolean | No | Emit full HTTP request/response details to stderr |
+| `--no-cache` | boolean | No | Bypass token file cache; perform fresh OAuth exchange |
+| `--profile` | option | No | Named config profile |
+
+```bash
+pega skill list
+```
+
+### `pega skill show`
+
+Print the SKILL.md body or a named reference to stdout
+
+| Flag | Type | Required | Description |
+|---|---|---|---|
+| `--format` | option | No | Output format (json, compact, yaml, table) |
+| `--fields` | option | No | Comma-separated top-level fields to include in output |
+| `--dry-run` | boolean | No | Print HTTP request details and exit without executing |
+| `--quiet` | boolean | No | Suppress all stderr progress/warning output |
+| `--verbose` | boolean | No | Emit full HTTP request/response details to stderr |
+| `--no-cache` | boolean | No | Bypass token file cache; perform fresh OAuth exchange |
+| `--profile` | option | No | Named config profile |
+
+```bash
+pega skill show
+```
+
 ## ai-agents
 
 ### `pega ai-agents close-conversation`

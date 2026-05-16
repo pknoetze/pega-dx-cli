@@ -64,7 +64,7 @@ function renderCoverageDoc(args: {
   lines.push(`# Pega DX API v${version} — Coverage Matrix`);
   lines.push('');
   lines.push(
-    `Generated: ${new Date().toISOString()}. Source: \`dx-api.yaml\`. Total operations: ${spec.length}.`
+    `Generated: ${new Date().toISOString()}. Source: \`spec/dx-api.yaml\`. Total operations: ${spec.length}.`
   );
   lines.push('');
   lines.push('## Summary');
@@ -134,7 +134,7 @@ const isMain =
 
 if (isMain) {
   const result = runAudit({
-    specPath: path.resolve(process.cwd(), 'dx-api.yaml'),
+    specPath: path.resolve(process.cwd(), 'spec/dx-api.yaml'),
     commandsRoot: path.resolve(process.cwd(), 'src/commands'),
     outputPath: path.resolve(process.cwd(), 'reference/api-coverage.md'),
   });

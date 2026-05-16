@@ -304,6 +304,6 @@ External sources, in order of preference:
    https://docs.pega.com/bundle/dx-api/page/platform/dx-api/dx-api-version-2-con.html
 2. **Project documentation site** —
    https://pknoetze.github.io/pega-dx-cli/
-3. **OpenAPI spec in this repo** — `dx-api.yaml` at the repo root,
+3. **OpenAPI spec in this repo** — `spec/dx-api.yaml`,
    useful when the CLI doesn't yet surface an endpoint and you need to
    inspect the request/response shape directly.

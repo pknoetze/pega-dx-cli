@@ -1,6 +1,6 @@
 # Pega DX API v25.1.2 — Coverage Matrix
 
-Generated: 2026-05-15T13:52:50.218Z. Source: `dx-api.yaml`. Total operations: 119.
+Generated: 2026-05-16T11:59:49.209Z. Source: `spec/dx-api.yaml`. Total operations: 119.
 
 ## Summary
 
@@ -142,3 +142,6 @@ These commands have no direct DX API mapping (auth, diagnostics, etc.).
 | `pega auth login` | `src/commands/auth/login.ts` |
 | `pega auth ping` | `src/commands/auth/ping.ts` |
 | `pega case-types list-bulk-actions` | `src/commands/case-types/list-bulk-actions.ts` |
+| `pega skill install` | `src/commands/skill/install.ts` |
+| `pega skill list` | `src/commands/skill/list.ts` |
+| `pega skill show` | `src/commands/skill/show.ts` |
