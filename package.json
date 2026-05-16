@@ -16,7 +16,8 @@
   "files": [
     "bin",
     "dist",
-    "oclif.manifest.json"
+    "oclif.manifest.json",
+    "skills"
   ],
   "scripts": {
     "build": "tsc --build",
@@ -26,13 +27,15 @@
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests",
     "audit:endpoints": "node --loader ts-node/esm scripts/audit-endpoints.ts",
     "check:examples": "node --loader ts-node/esm scripts/check-examples.ts",
+    "generate:skill-catalog": "node --loader ts-node/esm scripts/generate-skill-catalog.ts",
+    "generate:skill-catalog:check": "node --loader ts-node/esm scripts/generate-skill-catalog.ts --check",
     "smoke": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.smoke.config.ts",
     "prepare": "if [ -x node_modules/.bin/tsc ]; then npm run build && oclif manifest; fi",
     "prepack": "npm run clean && npm run build && oclif manifest",
     "pack:local": "npm run build && oclif pack tarballs --targets=$(node -e \"console.log(process.platform+'-'+process.arch)\")",
     "docs:generate": "node --loader ts-node/esm scripts/generate-docs-site.ts",
     "docs:dev": "vitepress dev site",
-    "docs:build": "npm run docs:generate && vitepress build site"
+    "docs:build": "npm run docs:generate && npm run generate:skill-catalog && vitepress build site"
   },
   "oclif": {
     "bin": "pega",
@@ -63,6 +66,9 @@
       },
       "auth-profiles": {
         "description": "Pega authentication profile operations (V2)"
+      },
+      "skill": {
+        "description": "Manage the pega-dx agent skill"
       }
     }
   },

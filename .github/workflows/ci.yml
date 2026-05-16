@@ -20,6 +20,7 @@ jobs:
       - run: npm run build
       - run: NODE_OPTIONS=--experimental-vm-modules npm test
       - run: npm run audit:endpoints
+      - run: npm run generate:skill-catalog:check
       - run: npm run check:examples
       - uses: actions/upload-artifact@v4
         if: always()
