@@ -140,6 +140,69 @@ npm link
 
 `npm link` makes the `pega` command available system-wide and points it at your local checkout. Rebuild (`npm run build`) after pulling new changes.
 
+## Configuration
+
+Configuration is read from environment variables first, falling back to `~/.pega-cli/config.json`. Credentials are never accepted as CLI flags.
+
+### Environment variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `PEGA_BASE_URL` | yes | Your Pega instance root URL (no `/prweb`) |
+| `PEGA_CLIENT_ID` | yes | OAuth 2.1 client credentials — client ID |
+| `PEGA_CLIENT_SECRET` | yes | OAuth 2.1 client credentials — client secret |
+| `PEGA_NO_CACHE` | no | Set to `true` to disable token file caching (CI/CD) |
+
+### Config file
+
+`~/.pega-cli/config.json`:
+
+```json
+{
+  "default": {
+    "baseUrl": "https://your-instance.pega.com",
+    "clientId": "your-client-id",
+    "clientSecret": "your-client-secret"
+  },
+  "staging": {
+    "baseUrl": "https://staging.your-instance.pega.com",
+    "clientId": "staging-client-id",
+    "clientSecret": "staging-client-secret"
+  }
+}
+```
+
+After creating `~/.pega-cli/config.json`, set restrictive permissions: `chmod 0600 ~/.pega-cli/config.json`. The file contains your OAuth client secret.
+
+### Env var precedence
+
+Environment variables (`PEGA_BASE_URL`, `PEGA_CLIENT_ID`, `PEGA_CLIENT_SECRET`) take precedence over config file settings. This makes it easy to override per-profile configuration in scripts or CI/CD workflows.
+
+### Multiple environments
+
+For managing multiple Pega environments (dev, staging, production), see the [Profiles guide](/guides/profiles) for detailed multi-environment configuration patterns.
+
+## Troubleshooting
+
+### Diagnostic tool
+
+Run `pega auth diagnose` to identify configuration and connectivity issues. The tool checks four things:
+
+| Check | What it verifies | How to fix |
+|---|---|---|
+| `baseUrl` | Your Pega instance is reachable | Set `PEGA_BASE_URL` (without `/prweb`) in your environment or config file |
+| `credentials` | OAuth client ID and secret are configured | Set `PEGA_CLIENT_ID` and `PEGA_CLIENT_SECRET` |
+| `oauth` | The OAuth 2.0 service rule is enabled in your instance | Verify client credentials in Pega Infinity admin; check that the OAuth 2.0 service rule is enabled |
+| `apiV2` | The Constellation DX API (V2) is enabled | Confirm your instance has the Constellation DX API (V2) enabled; check network reachability |
+
+### Common errors
+
+- `UNAUTHORIZED (401)` — credentials invalid or token expired. Run `pega auth login` to acquire a fresh token.
+- `NOT_FOUND (404)` — the case or assignment ID does not exist. Check the full handle and verify the ID format.
+- `PRECONDITION_FAILED (412)` — eTag mismatch on `assignments perform`. The assignment changed between the eTag fetch and the PATCH; retry the command.
+- `VALIDATION_FAIL (422)` — Pega rejected the payload. Inspect `--data` contents for required fields and correct types.
+- `RATE_LIMITED (429)` — Pega is throttling your requests. Back off exponentially and retry.
+
 ## Next steps
 
 Once installed, follow the [Quick Start](/quick-start) to configure credentials and run your first command.

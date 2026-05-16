@@ -53,3 +53,25 @@ done
 ```
 
 The script exits immediately on a non-zero exit code (exit code 1 or 2) thanks to `set -e`.
+
+## CI/CD usage
+
+In continuous integration environments, bypass the token cache entirely to ensure each invocation performs a fresh OAuth exchange:
+
+```bash
+export PEGA_NO_CACHE=true
+export PEGA_BASE_URL=https://your-instance.pega.com
+export PEGA_CLIENT_ID=${{ secrets.PEGA_CLIENT_ID }}
+export PEGA_CLIENT_SECRET=${{ secrets.PEGA_CLIENT_SECRET }}
+
+pega auth login
+pega cases get MYAPP-CASE-1 | jq '.status'
+```
+
+With `PEGA_NO_CACHE=true`, the CLI never reads or writes `~/.pega-cli/token.json`. Every invocation performs a fresh OAuth exchange, preventing stale token issues in CI environments.
+
+The typical pattern is:
+1. Set `PEGA_NO_CACHE=true` to disable caching
+2. Export the three required credentials from secrets or environment
+3. Run `pega auth login` to authenticate
+4. Chain your commands with `&&` to fail fast on errors
