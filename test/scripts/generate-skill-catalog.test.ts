@@ -38,6 +38,13 @@ const manifestFixture = JSON.stringify({
       args: { caseId: { name: 'caseId', required: true } },
       flags: {},
     },
+    'attachments list': {
+      id: 'attachments list',
+      description: 'List attachments on a case',
+      examples: ['<%= config.bin %> attachments list MYAPP-CASE-1'],
+      args: { caseId: { name: 'caseId', required: true } },
+      flags: {},
+    },
   },
 });
 
@@ -67,6 +74,10 @@ describe('generateSkillCatalog', () => {
     expect(catalog).toContain('### `pega cases get`');
     expect(catalog).toContain('### `pega tags list`');
     expect(catalog).toContain('Fetch a case by ID');
+    // Topics not declared in oclif.topics must still appear (after declared topics).
+    expect(catalog).toContain('## attachments');
+    expect(catalog).toContain('### `pega attachments list`');
+    expect(catalog.indexOf('## tags')).toBeLessThan(catalog.indexOf('## attachments'));
   });
 
   it('rewrites SKILL.md version from package.json', () => {

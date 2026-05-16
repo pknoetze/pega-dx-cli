@@ -101,9 +101,21 @@ function renderCatalog(manifest: OclifManifest, pkg: PackageJson): string {
     '> Regenerate with `npm run generate:skill-catalog`.',
     '',
   ];
+  const emitted = new Set<string>();
   for (const topic of topicOrder) {
     const cmds = (byTopic.get(topic) ?? []).sort((a, b) => a.id.localeCompare(b.id));
     if (cmds.length === 0) continue;
+    emitted.add(topic);
+    out.push(`## ${topic}`);
+    out.push('');
+    for (const cmd of cmds) {
+      out.push(renderCommand(cmd, bin));
+    }
+  }
+  // Emit any remaining topics from the manifest that weren't in oclif.topics, sorted alphabetically.
+  const remaining = [...byTopic.keys()].filter((t) => !emitted.has(t)).sort();
+  for (const topic of remaining) {
+    const cmds = (byTopic.get(topic) ?? []).sort((a, b) => a.id.localeCompare(b.id));
     out.push(`## ${topic}`);
     out.push('');
     for (const cmd of cmds) {
