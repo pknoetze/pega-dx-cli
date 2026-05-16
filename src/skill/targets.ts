@@ -1,4 +1,5 @@
 import * as path from 'node:path';
+import { SkillError } from './errors.js';
 
 export const SKILL_TARGETS = [
   'claude-code',
@@ -38,16 +39,12 @@ export function resolveTargetDest(target: SkillTarget, opts: ResolveDestOpts): R
       return { destination: path.join(opts.cwd, 'AGENTS.md'), format: 'file' };
     case 'dir': {
       if (!opts.dest) {
-        const err: any = new Error('INVALID_ARGS: --dest is required when --target dir');
-        err.code = 'INVALID_ARGS';
-        throw err;
+        throw new SkillError('INVALID_ARGS: --dest is required when --target dir', 'INVALID_ARGS');
       }
       return { destination: opts.dest, format: 'dir' };
     }
     default: {
-      const err: any = new Error(`INVALID_ARGS: unknown target ${String(target)}`);
-      err.code = 'INVALID_ARGS';
-      throw err;
+      throw new SkillError(`INVALID_ARGS: unknown target ${String(target)}`, 'INVALID_ARGS');
     }
   }
 }

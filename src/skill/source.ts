@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { SkillError } from './errors.js';
 
 export interface ResolveSourceOpts {
   installRoot?: string;
@@ -17,7 +18,5 @@ export function resolveSkillSource(opts: ResolveSourceOpts = {}): string {
       /* keep looking */
     }
   }
-  const err: any = new Error('Cannot locate skills/pega-dx source [INVALID_CONFIG]');
-  err.code = 'INVALID_CONFIG';
-  throw err;
+  throw new SkillError('Cannot locate skills/pega-dx source [INVALID_CONFIG]', 'INVALID_CONFIG');
 }

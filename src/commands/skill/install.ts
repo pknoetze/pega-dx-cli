@@ -5,7 +5,7 @@ import { Flags } from '@oclif/core';
 import { BaseCommand, type BaseFlags } from '../../base-command.js';
 import { resolveSkillSource } from '../../skill/source.js';
 import { installSkill } from '../../skill/install-impl.js';
-import { SKILL_TARGETS } from '../../skill/targets.js';
+import { SKILL_TARGETS, type SkillTarget } from '../../skill/targets.js';
 
 export default class SkillInstall extends BaseCommand {
   static override description =
@@ -44,7 +44,7 @@ export default class SkillInstall extends BaseCommand {
 
     try {
       const result = installSkill({
-        target: flags.target as any,
+        target: flags.target as SkillTarget,
         sourceDir,
         home: os.homedir(),
         cwd: process.cwd(),

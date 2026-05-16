@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { SkillError } from './errors.js';
 
 const VALID_SECTIONS = new Set([
   'concepts',
@@ -33,11 +34,10 @@ export function readSkillSection(opts: ShowOpts): ShowResult {
     return { section: 'SKILL', content: stripFrontmatter(md) };
   }
   if (!VALID_SECTIONS.has(opts.section)) {
-    const err: any = new Error(
+    throw new SkillError(
       `INVALID_ARGS: unknown section "${opts.section}". Valid: SKILL, ${[...VALID_SECTIONS].join(', ')}`,
+      'INVALID_ARGS',
     );
-    err.code = 'INVALID_ARGS';
-    throw err;
   }
   const file = path.join(opts.sourceDir, 'references', `${opts.section}.md`);
   return { section: opts.section, content: fs.readFileSync(file, 'utf8') };

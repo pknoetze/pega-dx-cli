@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { resolveTargetDest, type SkillTarget } from './targets.js';
 import { convertSkillToSingleFile, type SkillSource } from './convert.js';
+import { SkillError } from './errors.js';
 
 export interface InstallOpts {
   target: SkillTarget;
@@ -68,9 +69,10 @@ function installAgentsMd(content: string, existing: string | null, force: boolea
   if (!existing) return content;
   if (existing.includes(MARKER_START) && existing.includes(MARKER_END)) {
     if (!force) {
-      const err: any = new Error('INVALID_ARGS: AGENTS.md already contains pega-dx skill section; use --force to replace');
-      err.code = 'INVALID_ARGS';
-      throw err;
+      throw new SkillError(
+        'INVALID_ARGS: AGENTS.md already contains pega-dx skill section; use --force to replace',
+        'INVALID_ARGS',
+      );
     }
     const re = new RegExp(
       `## Pega DX\\n${MARKER_START}[\\s\\S]*?${MARKER_END}\\n?`,
@@ -104,9 +106,10 @@ export function installSkill(opts: InstallOpts): InstallResult {
   if (format === 'dir') {
     if (fs.existsSync(destination)) {
       if (!opts.force) {
-        const err: any = new Error(`INVALID_ARGS: destination already exists: ${destination} (use --force)`);
-        err.code = 'INVALID_ARGS';
-        throw err;
+        throw new SkillError(
+          `INVALID_ARGS: destination already exists: ${destination} (use --force)`,
+          'INVALID_ARGS',
+        );
       }
       rmRf(destination);
     }
@@ -126,9 +129,10 @@ export function installSkill(opts: InstallOpts): InstallResult {
   }
 
   if (fs.existsSync(destination) && !opts.force) {
-    const err: any = new Error(`INVALID_ARGS: destination already exists: ${destination} (use --force)`);
-    err.code = 'INVALID_ARGS';
-    throw err;
+    throw new SkillError(
+      `INVALID_ARGS: destination already exists: ${destination} (use --force)`,
+      'INVALID_ARGS',
+    );
   }
   const convertTarget = opts.target as 'cursor' | 'continue' | 'windsurf';
   const payload = convertSkillToSingleFile({ source, target: convertTarget });
