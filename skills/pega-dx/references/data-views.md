@@ -11,7 +11,7 @@ output-format details, read concepts.md.
 3. Query body shapes (`--params` vs. `--data`)
 4. Query timeout (45s) and paging
 5. Record CRUD (with eTag)
-6. Record actions (POST view — unlike cases)
+6. Record actions (get-action is POST, perform-action is PATCH)
 
 ## 1. Catalog: list-objects vs. list-pages
 
@@ -167,7 +167,7 @@ server, surfaced as `ETAG_MISMATCH` (exit 8). See concepts.md section
 > reflects the underlying API: DELETE takes URL query params, not a
 > body.
 
-## 6. Record actions (POST view — unlike cases)
+## 6. Record actions (get-action is POST, perform-action is PATCH)
 
 Data records expose **actions** the same way cases do, but with one
 important shape difference: `data get-action` is a **POST**, while
