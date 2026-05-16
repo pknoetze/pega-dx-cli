@@ -3,6 +3,14 @@
   "version": "1.0.0",
   "description": "CLI for Pega Infinity DX API V2 (Constellation)",
   "homepage": "https://pknoetze.github.io/pega-dx-cli/",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pknoetze/pega-dx-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pknoetze/pega-dx-cli/issues"
+  },
   "packageManager": "npm@11.5.2",
   "type": "module",
   "bin": {

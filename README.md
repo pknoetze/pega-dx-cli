@@ -62,7 +62,11 @@ Details: [Agent Skill guide](https://pknoetze.github.io/pega-dx-cli/guides/agent
 
 ## Contributing
 
-Bugs and feature requests: [Issues](https://github.com/pknoetze/pega-dx-cli/issues). See [CONTRIBUTING.md](CONTRIBUTING.md) if it exists, otherwise open a PR — `npm ci && npm run build && NODE_OPTIONS=--experimental-vm-modules npm test` to validate locally.
+Bugs and feature requests: [Issues](https://github.com/pknoetze/pega-dx-cli/issues). PRs welcome — validate locally with:
+
+```bash
+npm ci && npm run build && NODE_OPTIONS=--experimental-vm-modules npm test
+```
 
 ## License
 
