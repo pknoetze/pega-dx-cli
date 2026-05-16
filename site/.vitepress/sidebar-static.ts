@@ -13,6 +13,7 @@ export default [
       { text: 'Profiles', link: '/guides/profiles' },
       { text: 'Interactive Mode', link: '/guides/interactive-mode' },
       { text: 'Piping & Scripting', link: '/guides/piping-scripting' },
+      { text: 'Agent Skill', link: '/guides/agent-skill' },
     ],
   },
   {

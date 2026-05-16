@@ -11,4 +11,7 @@ hero:
     - theme: alt
       text: Quick Start
       link: /quick-start
+    - theme: alt
+      text: Pega DX API docs ↗
+      link: https://docs.pega.com/bundle/dx-api/page/platform/dx-api/dx-api-version-2-con.html
 ---

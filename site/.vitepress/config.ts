@@ -45,7 +45,7 @@ export default defineConfig({
       text: 'Edit this page on GitHub',
     },
     footer: {
-      message: 'Released under the MIT License.',
+      message: 'Released under the MIT License. <a href="https://docs.pega.com/bundle/dx-api/page/platform/dx-api/dx-api-version-2-con.html">Pega DX API official reference ↗</a>',
       copyright: 'Copyright © 2026 Philip Knoetze',
     },
   },
