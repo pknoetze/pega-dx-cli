@@ -1,14 +1,22 @@
-# pega-dx-cli
+![Pega DX CLI](https://raw.githubusercontent.com/pknoetze/pega-dx-cli/main/pega-dx-cli.png)
 
+# Pega DX CLI
+
+[![Documentation](https://img.shields.io/badge/docs-pknoetze.github.io%2Fpega--dx--cli-purple)](https://pknoetze.github.io/pega-dx-cli/)
+[![Pega Infinity](https://img.shields.io/badge/Pega_Infinity-25%2B-blue.svg)](https://www.pega.com/)
 [![npm](https://img.shields.io/npm/v/pega-dx-cli)](https://www.npmjs.com/package/pega-dx-cli)
-[![Documentation](https://img.shields.io/badge/docs-pknoetze.github.io%2Fpega--dx--cli-blue)](https://pknoetze.github.io/pega-dx-cli/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
 
 Developer-first command-line interface for the Pega Infinity™ DX API v2 (Constellation).
 Built for both humans at the terminal and LLM coding agents. **v1.0.0 covers Pega DX API v25.1.2.**
 
 📚 **Documentation:** https://pknoetze.github.io/pega-dx-cli/
 📖 **Pega DX API reference:** https://docs.pega.com/bundle/dx-api/page/platform/dx-api/dx-api-version-2-con.html
+
+## Experimental
+
+The Pega DX CLI is an experimental project exploring the use of a CLI to interact with the Pega Infinity&trade; DX API endpoints. This is not an official Pegasystems product and is not generally available. All commands, parameters, and other features are subject to change or deprecation at any time, with or without notice. Do not use this CLI in a production environment. We welcome feedback and contributions to help shape the future of this repository.
+
 
 ## Install
 
@@ -58,4 +66,4 @@ Bugs and feature requests: [Issues](https://github.com/pknoetze/pega-dx-cli/issu
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
