@@ -18,6 +18,8 @@ export default [
   {
     text: 'Reference',
     items: [
+      { text: 'Global Flags', link: '/reference/global-flags' },
+      { text: 'Exit Codes', link: '/reference/exit-codes' },
       { text: 'API Coverage', link: '/api-coverage' },
     ],
   },
